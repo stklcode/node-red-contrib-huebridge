@@ -52,32 +52,32 @@
         category: 'config',
         defaults: {
             name: {
-                value: ""
+                value: ''
             },
             address: {
-                value:"", required:true
+                value:'', required:true
             },
             netmask: {
-                value:"255.255.255.0", required:true
+                value:'255.255.255.0', required:true
             },
             gateway: {
-                value:"192.168.1.1", required:true
+                value:'192.168.1.1', required:true
             },
             port: {
                 value:80, required:true, validate:RED.validators.number(true)
             }
         },
-        color:"#3FADB5",
-        icon: "bridge.png",
+        color:'#3FADB5',
+        icon: 'bridge.png',
         label: function() {
-            return this.name || "huebridge-client";
+            return this.name || 'huebridge-client';
         },
         labelStyle: function() {
-            return this.name ? "node_label_italic" : "";
+            return this.name ? 'node_label_italic' : '';
         },
         oneditprepare: function() {
             if (this.timezone === undefined) {
-                $("#node-config-input-timezone").val("Europe/Copenhagen");
+                $('#node-config-input-timezone').val('Europe/Copenhagen');
             }
         }
     });
@@ -117,11 +117,11 @@
         paletteLabel: 'Link Button',
         defaults: {
             client: {
-                type: "huebridge-client", 
+                type: 'huebridge-client',
                 required: true
             },
             name: {
-                value: ""
+                value: ''
             },
             timeout: {
                 value: 30, required:true, validate: RED.validators.regex(/^(#$|(\+|[^+#]*)(\/(\+|[^+#]*))*(\/(\+|#|[^+#]*))?$)/)
@@ -129,13 +129,13 @@
         },
         inputs: 1,
         outputs: 0,
-        color:"#3FADB5",
-        icon: "bridge.png",
+        color:'#3FADB5',
+        icon: 'bridge.png',
         label: function() {
-            return this.name || "Link Button";
+            return this.name || 'Link Button';
         },
         labelStyle: function() {
-            return this.name ? "node_label_italic" : ""
+            return this.name ? 'node_label_italic' : ''
         }
     })
 </script>

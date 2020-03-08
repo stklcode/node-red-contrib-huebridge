@@ -17,7 +17,7 @@
  **/
 
 module.exports = function(RED) {
-    "use strict";
+    'use strict';
 
     /******************************************************************************************************************
 	 * 
@@ -43,7 +43,7 @@ module.exports = function(RED) {
         // respond to inputs from NodeRED
         //
         this.on('input', function (msg) {
-            RED.log.debug("TransformNode(input): payload = " + JSON.stringify(msg.payload));
+            RED.log.debug('TransformNode(input): payload = ' + JSON.stringify(msg.payload));
 
             var object = msg.payload;
             
@@ -64,46 +64,46 @@ module.exports = function(RED) {
 
             if (object.hasOwnProperty('colormode')) {
                 if (object.colormode === 'xy' && object.hasOwnProperty('xy')) {
-                    RED.log.debug("TransformNode(input): colormode 'xy'");
+                    RED.log.debug('TransformNode(input): colormode "xy"');
                     node.xy  = object.xy;
                     node.ct  = null;
                     node.hue = null;
                     node.sat = null;
                 } else if (object.colormode === 'ct' && object.hasOwnProperty('ct')) {
-                    RED.log.debug("TransformNode(input): colormode 'ct'");
+                    RED.log.debug('TransformNode(input): colormode "ct"');
                     node.xy  = null;
                     node.ct  = object.ct;
                     node.hue = null;
                     node.sat = null;
                 } else if (object.colormode === 'hs') {
-                    RED.log.debug("TransformNode(input): colormode 'hs'");
+                    RED.log.debug('TransformNode(input): colormode "hs"');
                     node.xy  = null;
                     node.ct  = null;
 
                     if (object.hasOwnProperty('hue')) {
-                        RED.log.debug("TransformNode(input): got hue");
+                        RED.log.debug('TransformNode(input): got hue');
                         node.hue = object.hue;
                     }
                     if (object.hasOwnProperty('sat')) {
-                        RED.log.debug("TransformNode(input): got sat");
+                        RED.log.debug('TransformNode(input): got sat');
                         node.sat = object.sat;
                     }
                 }
             }
 
             if (object.hasOwnProperty('transitiontime') && node.onoff === true && object.transitiontime > 0) {
-                RED.log.debug("TransformNode(input): transitiontime = " + object.transitiontime);
+                RED.log.debug('TransformNode(input): transitiontime = ' + object.transitiontime);
 
                 var target_bri = object.bri * 0.0039370078740157;  // scale from [0 - 254] to [0.0 - 1.0]
                 var bri_steps  = (target_bri - node.bri) / object.transitiontime;
 
-                RED.log.debug("TransformNode(input): target_bri = " + target_bri);
-                RED.log.debug("TransformNode(input): bri_steps  = " + bri_steps);
+                RED.log.debug('TransformNode(input): target_bri = ' + target_bri);
+                RED.log.debug('TransformNode(input): bri_steps  = ' + bri_steps);
 
                 node.timer = setInterval(function(node, topic, target_bri, bri_steps) {
                     node.bri += bri_steps;
 
-                    //RED.log.debug("TransformNode(transition): node.bri = " + node.bri);
+                    //RED.log.debug('TransformNode(transition): node.bri = ' + node.bri);
 
                     if (node.bri >= target_bri) {
                         // transition completed
@@ -112,7 +112,7 @@ module.exports = function(RED) {
                         node.timer = null;
                         node.bri   = target_bri > 1.0 ? 1.0 : target_bri;
 
-                        RED.log.debug("TransformNode(transition): transition completed");
+                        RED.log.debug('TransformNode(transition): transition completed');
                     }
                     
                     node.sendValues(node, topic);
@@ -156,7 +156,7 @@ module.exports = function(RED) {
             };
 
             if (node.xy !== null) {
-                RED.log.debug("TransformNode(sendValues): method xy");
+                RED.log.debug('TransformNode(sendValues): method xy');
                 rgb = node.transformXYZSimple(node.xy[0], node.xy[1]);
 
                 // adjust brightness
@@ -164,7 +164,7 @@ module.exports = function(RED) {
                 rgb.g = rgb.g * node.bri;
                 rgb.b = rgb.b * node.bri;
             } else if (node.ct !== null) {
-                RED.log.debug("TransformNode(sendValues): method ct");
+                RED.log.debug('TransformNode(sendValues): method ct');
                 rgb = node.temperatureToRGB(node.ct);
 
                 // adjust brightness
@@ -172,10 +172,10 @@ module.exports = function(RED) {
                 rgb.g = rgb.g * node.bri;
                 rgb.b = rgb.b * node.bri;
             } else if(node.hue !== null & node.sat !== null) {
-                RED.log.debug("TransformNode(sendValues): method hs");
+                RED.log.debug('TransformNode(sendValues): method hs');
                 rgb = node.hsv2rgb(node.hue / 65535, node.sat / 254, node.bri);
             } else {
-                RED.log.debug("TransformNode(sendValues): no transform method available");
+                RED.log.debug('TransformNode(sendValues): no transform method available');
                 return;
             }
 
@@ -188,10 +188,10 @@ module.exports = function(RED) {
             var msg = {
                 topic:   topic,
                 payload: rgb
-            }
+            };
 
             node.send(msg);            
-        }
+        };
         //
         // https://developers.meethue.com/documentation/color-conversions-rgb-xy
         //
@@ -253,16 +253,16 @@ module.exports = function(RED) {
             }
 
             return {r:r, g:g, b:b};
-        }
+        };
         //
         this.ctToKelvin = function(ct) {
             // Mirek = 1,000,000 / (color temperature in Kelvin).
             // (color temperature in Kelvin) = 1,000,000 / Mirek
             return 1000000 / ct;
-        }
+        };
         //
         this.temperatureToRGB = function(ct) {
-            //RED.log.debug("TemperatureToRGB(): ct = " + ct);
+            //RED.log.debug('TemperatureToRGB(): ct = ' + ct);
 
             const XYZ_to_RGB = [
                 [  3.24071,	 -0.969258,   0.0556352 ],
@@ -271,7 +271,7 @@ module.exports = function(RED) {
             ];
 
             var T = this.ctToKelvin(ct);
-            //RED.log.debug("TemperatureToRGB(): T = " + T);
+            //RED.log.debug('TemperatureToRGB(): T = ' + T);
 
             var RGB = [0.0, 0.0, 0.0];
             var c;
@@ -317,7 +317,7 @@ module.exports = function(RED) {
                 g: RGB[1], 
                 b: RGB[2]
             };
-        }
+        };
         //
         // https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both
         // Mar 24 '16 at 19:57, Geremia
@@ -371,7 +371,7 @@ module.exports = function(RED) {
                 g: g,
                 b: b
             };
-        }        
+        };
         /**
          * Converts an HSL color value to RGB. Conversion formula
          * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
@@ -384,9 +384,9 @@ module.exports = function(RED) {
          * @return  {Object}          The RGB representation
          */
         this.hslToRgb = function(h, s, l) {
-            RED.log.debug("TransformNode(hslToRgb): h = " + h);
-            RED.log.debug("TransformNode(hslToRgb): s = " + s);
-            RED.log.debug("TransformNode(hslToRgb): l = " + l);
+            RED.log.debug('TransformNode(hslToRgb): h = ' + h);
+            RED.log.debug('TransformNode(hslToRgb): s = ' + s);
+            RED.log.debug('TransformNode(hslToRgb): l = ' + l);
 
             var r, g, b;
 
@@ -400,7 +400,7 @@ module.exports = function(RED) {
                     if (t < 1/2) return q;
                     if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
                     return p;
-                }
+                };
 
                 var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
                 var p = 2 * l - q;
@@ -410,9 +410,9 @@ module.exports = function(RED) {
                 b = hue2rgb(p, q, h - 1/3);
             }
 
-            RED.log.debug("TransformNode(hslToRgb): r = " + r);
-            RED.log.debug("TransformNode(hslToRgb): g = " + g);
-            RED.log.debug("TransformNode(hslToRgb): b = " + b);
+            RED.log.debug('TransformNode(hslToRgb): r = ' + r);
+            RED.log.debug('TransformNode(hslToRgb): g = ' + g);
+            RED.log.debug('TransformNode(hslToRgb): b = ' + b);
 
             return {
                 r: r,
@@ -421,27 +421,27 @@ module.exports = function(RED) {
             };
 
             //return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-        }
+        };
     }
 
-    RED.nodes.registerType("huebridge-transform", TransformNode);
+    RED.nodes.registerType('huebridge-transform', TransformNode);
 
     //
     var scaleHue = function(hue) {
         // scale from 0 - 65535 => 0.0 - 360.0
         var v = hue / 182.04166;
         return v > 360.0 ? 360.0 : v; 
-    }
+    };
     //
     var scaleSaturation = function(sat) {
         // scale from 0 - 254 => 0.0 - 100.0
         var v = sat / 2.54;
         return v > 100 ? 100 : v; 
-    }
+    };
     //
     var scaleBrightness = function(bri) {
         // scale from 1 to 254 => 0 - 100%
         var v = Math.round(bri / 2.54);
         return v > 100 ? 100 : v; 
-    }
-}
+    };
+};

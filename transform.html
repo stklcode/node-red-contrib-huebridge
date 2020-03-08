@@ -49,26 +49,26 @@
         paletteLabel: 'Transform',
         defaults: {
             name: {
-                value: ""
+                value: ''
             },
             typ: {
-                value: "0",
+                value: '0',
                 required: true
             }
         },
         inputs: 1,
         outputs: 1,
-        color:"#3FADB5",
-        icon: "bridge.png",
+        color:'#3FADB5',
+        icon: 'bridge.png',
         label: function() {
-            return this.name || "Transform";
+            return this.name || 'Transform';
         },
         labelStyle: function() {
-            return this.name ? "node_label_italic" : ""
+            return this.name ? 'node_label_italic' : ''
         },
         oneditprepare: function() {
             if (typeof this.typ === undefined) {
-                $("#node-input-typ").val("0");
+                $('#node-input-typ').val('0');
             }
         }
     })

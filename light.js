@@ -17,7 +17,7 @@
  **/
 
 module.exports = function(RED) {
-    "use strict";
+    'use strict';
 
     /******************************************************************************************************************
 	 * 
@@ -30,20 +30,20 @@ module.exports = function(RED) {
         this.clientConn = RED.nodes.getNode(this.client);
 
         if (!this.clientConn) {
-            this.error(RED._("light.errors.missing-config"));
-            this.status({fill:"red", shape:"dot", text:"Missing config"});
+            this.error(RED._('light.errors.missing-config'));
+            this.status({fill:'red', shape:'dot', text:'Missing config'});
             return;
         } else if (typeof this.clientConn.register !== 'function') {
-            this.error(RED._("light.errors.missing-bridge"));
-            this.status({fill:"red", shape:"dot", text:"Missing bridge"});
+            this.error(RED._('light.errors.missing-bridge'));
+            this.status({fill:'red', shape:'dot', text:'Missing bridge'});
             return;            
         }
         
-        this.lightid = this.clientConn.register(this, 'light', config.name, "0x0000", config.typ);
+        this.lightid = this.clientConn.register(this, 'light', config.name, '0x0000', config.typ);
 
         if (this.lightid === false) {
-            this.error(RED._("light.errors.light-create"));
-            this.status({fill:"red", shape:"dot", text:RED._("light.errors.light-create")});
+            this.error(RED._('light.errors.light-create'));
+            this.status({fill:'red', shape:'dot', text:RED._('light.errors.light-create')});
             return;
         }
 
@@ -51,12 +51,12 @@ module.exports = function(RED) {
 
         // get a COPY of the light
         this.light = node.clientConn.bridge.dsGetLight(this.lightid);
-        RED.log.debug("LightOnOffNode(startup): light = " + JSON.stringify(this.light));
+        RED.log.debug('LightOnOffNode(startup): light = ' + JSON.stringify(this.light));
 
-        this.status({fill:"green", shape:"dot", text:"Ready"});
+        this.status({fill:'green', shape:'dot', text:'Ready'});
 
         setTimeout(function(node) {
-            RED.log.debug("LightOnOffNode(): initial write");
+            RED.log.debug('LightOnOffNode(): initial write');
 
             outputState(node, node.light.state, node.light.state);
         }, 100, node);
@@ -65,7 +65,7 @@ module.exports = function(RED) {
         // light state change
         //
         this.on('light-state-modified', function(id, object) {
-            RED.log.debug("LightOnOffNode(light-state-modified): object = " + JSON.stringify(object));
+            RED.log.debug('LightOnOffNode(light-state-modified): object = ' + JSON.stringify(object));
             
             var changedState = {};
 
@@ -85,8 +85,8 @@ module.exports = function(RED) {
                 changedState.effect = object.effect;
             }
 
-            this.status({fill:"green", shape:"dot", text:"Light state changed"});
-            setTimeout(function () { node.status({}) }, 3000);
+            this.status({fill:'green', shape:'dot', text:'Light state changed'});
+            setTimeout(function () { node.status({}); }, 3000);
 
             outputState(node, node.light.state, changedState);
             
@@ -97,16 +97,16 @@ module.exports = function(RED) {
         // light modified
         //
         this.on('light-modified', function(id, object) {
-            RED.log.debug("LightOnOffNode(light-modified): object = " + JSON.stringify(object));
+            RED.log.debug('LightOnOffNode(light-modified): object = ' + JSON.stringify(object));
 
-            this.status({fill:"green", shape:"dot", text:"Light config modified"});
-            setTimeout(function () { node.status({}) }, 3000);
+            this.status({fill:'green', shape:'dot', text:'Light config modified'});
+            setTimeout(function () { node.status({}); }, 3000);
         });
         //
         // respond to inputs from NodeRED
         //
         this.on('input', function (msg) {
-            RED.log.debug("LightOnOffNode(input)");
+            RED.log.debug('LightOnOffNode(input)');
 
             if (msg.topic === 'success' || msg.topic.toUpperCase() === 'SETSTATE') {
                 var object = {};
@@ -114,7 +114,7 @@ module.exports = function(RED) {
                 if (typeof msg.payload === 'object') {
                     object = msg.payload;
                 } else {
-                    RED.log.debug("LightOnOffNode(input): typeof payload = " + typeof msg.payload);
+                    RED.log.debug('LightOnOffNode(input): typeof payload = ' + typeof msg.payload);
                     return;
                 }
 
@@ -152,7 +152,7 @@ module.exports = function(RED) {
                 if (typeof msg.payload === 'object') {
                     object = msg.payload;
                 } else {
-                    RED.log.debug("LightOnOffNode(input): typeof payload = " + typeof msg.payload);
+                    RED.log.debug('LightOnOffNode(input): typeof payload = ' + typeof msg.payload);
                     return;
                 }
 
@@ -193,7 +193,7 @@ module.exports = function(RED) {
         });
     }
 
-    RED.nodes.registerType("huebridge-light-onoff", LightOnOffNode);
+    RED.nodes.registerType('huebridge-light-onoff', LightOnOffNode);
 
     /******************************************************************************************************************
 	 * 
@@ -207,20 +207,20 @@ module.exports = function(RED) {
         this.clientConn = RED.nodes.getNode(this.client);
 
         if (!this.clientConn) {
-            this.error(RED._("light.errors.missing-config"));
-            this.status({fill:"red", shape:"dot", text:"Missing config"});
+            this.error(RED._('light.errors.missing-config'));
+            this.status({fill:'red', shape:'dot', text:'Missing config'});
             return;
         } else if (typeof this.clientConn.register !== 'function') {
-            this.error(RED._("light.errors.missing-bridge"));
-            this.status({fill:"red", shape:"dot", text:"Missing bridge"});
+            this.error(RED._('light.errors.missing-bridge'));
+            this.status({fill:'red', shape:'dot', text:'Missing bridge'});
             return;            
         }
         
-        this.lightid = this.clientConn.register(this, 'light', config.name, "0x0100", config.typ);
+        this.lightid = this.clientConn.register(this, 'light', config.name, '0x0100', config.typ);
 
         if (this.lightid === false) {
-            this.error(RED._("light.errors.light-create"));
-            this.status({fill:"red", shape:"dot", text:RED._("light.errors.light-create")});
+            this.error(RED._('light.errors.light-create'));
+            this.status({fill:'red', shape:'dot', text:RED._('light.errors.light-create')});
             return;
         }
 
@@ -228,12 +228,12 @@ module.exports = function(RED) {
 
         // get a COPY of the light
         this.light = node.clientConn.bridge.dsGetLight(this.lightid);
-        RED.log.debug("LightDimmableNode(startup): light = " + JSON.stringify(this.light));
+        RED.log.debug('LightDimmableNode(startup): light = ' + JSON.stringify(this.light));
 
-        this.status({fill:"green", shape:"dot", text:"Ready"});
+        this.status({fill:'green', shape:'dot', text:'Ready'});
 
         setTimeout(function(node) {
-            RED.log.debug("LightDimmableNode(): initial write");
+            RED.log.debug('LightDimmableNode(): initial write');
 
             outputState(node, node.light.state, node.light.state);
         }, 100, node);
@@ -242,7 +242,7 @@ module.exports = function(RED) {
         // light state change
         //
         this.on('light-state-modified', function(id, object) {
-            RED.log.debug("LightDimmableNode(light-state-modified): object = " + JSON.stringify(object));
+            RED.log.debug('LightDimmableNode(light-state-modified): object = ' + JSON.stringify(object));
             
             var changedState = {};
 
@@ -259,8 +259,8 @@ module.exports = function(RED) {
                 changedState.effect = object.effect;
             }
     
-            this.status({fill:"green", shape:"dot", text:"Light state changed"});
-            setTimeout(function () { node.status({}) }, 3000);
+            this.status({fill:'green', shape:'dot', text:'Light state changed'});
+            setTimeout(function () { node.status({}); }, 3000);
 
             outputState(node, node.light.state, changedState);
             
@@ -271,16 +271,16 @@ module.exports = function(RED) {
         // light modified
         //
         this.on('light-modified', function(id, object) {
-            RED.log.debug("LightDimmableNode(light-modified): object = " + JSON.stringify(object));
+            RED.log.debug('LightDimmableNode(light-modified): object = ' + JSON.stringify(object));
 
-            this.status({fill:"green", shape:"dot", text:"Light config modified"});
-            setTimeout(function () { node.status({}) }, 3000);
+            this.status({fill:'green', shape:'dot', text:'Light config modified'});
+            setTimeout(function () { node.status({}); }, 3000);
         });
         //
         // respond to inputs from NodeRED
         //
         this.on('input', function (msg) {
-            RED.log.debug("LightDimmableNode(input)");
+            RED.log.debug('LightDimmableNode(input)');
 
             if (msg.topic === 'success') {
                 // this is a message that comes back from the actual device - don't send it, just update the state
@@ -291,7 +291,7 @@ module.exports = function(RED) {
                 if (typeof msg.payload === 'object') {
                     object = msg.payload;
                 } else {
-                    RED.log.debug("LightExtendedColorNode(input): typeof payload = " + typeof msg.payload);
+                    RED.log.debug('LightExtendedColorNode(input): typeof payload = ' + typeof msg.payload);
                     return;
                 }
 
@@ -329,7 +329,7 @@ module.exports = function(RED) {
         });
     }
 
-    RED.nodes.registerType("huebridge-light-dimmable", LightDimmableNode);
+    RED.nodes.registerType('huebridge-light-dimmable', LightDimmableNode);
 
     /******************************************************************************************************************
 	 * 
@@ -343,20 +343,20 @@ module.exports = function(RED) {
         this.clientConn = RED.nodes.getNode(this.client);
 
         if (!this.clientConn) {
-            this.error(RED._("light.errors.missing-config"));
-            this.status({fill:"red", shape:"dot", text:"Missing config"});
+            this.error(RED._('light.errors.missing-config'));
+            this.status({fill:'red', shape:'dot', text:'Missing config'});
             return;
         } else if (typeof this.clientConn.register !== 'function') {
-            this.error(RED._("light.errors.missing-bridge"));
-            this.status({fill:"red", shape:"dot", text:"Missing bridge"});
+            this.error(RED._('light.errors.missing-bridge'));
+            this.status({fill:'red', shape:'dot', text:'Missing bridge'});
             return;            
         }
         
-        this.lightid = this.clientConn.register(this, 'light', config.name, "0x0200", config.typ);
+        this.lightid = this.clientConn.register(this, 'light', config.name, '0x0200', config.typ);
 
         if (this.lightid === false) {
-            this.error(RED._("light.errors.light-create"));
-            this.status({fill:"red", shape:"dot", text:RED._("light.errors.light-create")});
+            this.error(RED._('light.errors.light-create'));
+            this.status({fill:'red', shape:'dot', text:RED._('light.errors.light-create')});
             return;
         }
 
@@ -364,12 +364,12 @@ module.exports = function(RED) {
 
         // get a COPY of the light
         this.light = node.clientConn.bridge.dsGetLight(this.lightid);
-        RED.log.debug("LightColorNode(startup): light = " + JSON.stringify(this.light));
+        RED.log.debug('LightColorNode(startup): light = ' + JSON.stringify(this.light));
 
-        this.status({fill:"green", shape:"dot", text:"Ready"});
+        this.status({fill:'green', shape:'dot', text:'Ready'});
 
         setTimeout(function(node) {
-            RED.log.debug("LightColorNode(): initial write");
+            RED.log.debug('LightColorNode(): initial write');
 
             outputState(node, node.light.state, node.light.state);
         }, 100, node);
@@ -378,7 +378,7 @@ module.exports = function(RED) {
         // light state change
         //
         this.on('light-state-modified', function(id, object) {
-            RED.log.debug("LightColorNode(light-state-modified): object = " + JSON.stringify(object));
+            RED.log.debug('LightColorNode(light-state-modified): object = ' + JSON.stringify(object));
             
             var changedState = {};
 
@@ -410,8 +410,8 @@ module.exports = function(RED) {
                 changedState.effect = object.effect;
             }
     
-            this.status({fill:"green", shape:"dot", text:"Light state changed"});
-            setTimeout(function () { node.status({}) }, 3000);
+            this.status({fill:'green', shape:'dot', text:'Light state changed'});
+            setTimeout(function () { node.status({}); }, 3000);
 
             outputState(node, node.light.state, changedState);
             
@@ -422,16 +422,16 @@ module.exports = function(RED) {
         // light modified
         //
         this.on('light-modified', function(id, object) {
-            RED.log.debug("LightColorNode(light-modified): object = " + JSON.stringify(object));
+            RED.log.debug('LightColorNode(light-modified): object = ' + JSON.stringify(object));
 
-            this.status({fill:"green", shape:"dot", text:"Light config modified"});
-            setTimeout(function () { node.status({}) }, 3000);
+            this.status({fill:'green', shape:'dot', text:'Light config modified'});
+            setTimeout(function () { node.status({}); }, 3000);
         });
         //
         // respond to inputs from NodeRED
         //
         this.on('input', function (msg) {
-            RED.log.debug("LightColorNode(input)");
+            RED.log.debug('LightColorNode(input)');
 
             if (msg.topic === 'success') {
                 // this is a message that comes back from the actual device - don't send it, just update the state
@@ -441,7 +441,7 @@ module.exports = function(RED) {
                 if (typeof msg.payload === 'object') {
                     object = msg.payload;
                 } else {
-                    RED.log.debug("LightColorNode(input): typeof payload = " + typeof msg.payload);
+                    RED.log.debug('LightColorNode(input): typeof payload = ' + typeof msg.payload);
                     return;
                 }
 
@@ -494,7 +494,7 @@ module.exports = function(RED) {
         });
     }
 
-    RED.nodes.registerType("huebridge-light-color", LightColorNode);
+    RED.nodes.registerType('huebridge-light-color', LightColorNode);
 
     /******************************************************************************************************************
 	 * 
@@ -507,22 +507,22 @@ module.exports = function(RED) {
         this.clientConn = RED.nodes.getNode(this.client);
 
         if (!this.clientConn) {
-            this.error(RED._("light.errors.missing-config"));
-            this.status({fill:"red", shape:"dot", text:"Missing config"});
+            this.error(RED._('light.errors.missing-config'));
+            this.status({fill:'red', shape:'dot', text:'Missing config'});
             return;
         } else if (typeof this.clientConn.register !== 'function') {
-            this.error(RED._("light.errors.missing-bridge"));
-            this.status({fill:"red", shape:"dot", text:"Missing bridge"});
+            this.error(RED._('light.errors.missing-bridge'));
+            this.status({fill:'red', shape:'dot', text:'Missing bridge'});
             return;            
         }
 
-        RED.log.debug("LightExtendedColorNode(startup): config.typ = " + config.typ);
+        RED.log.debug('LightExtendedColorNode(startup): config.typ = ' + config.typ);
         
-        this.lightid = this.clientConn.register(this, 'light', config.name, "0x0210", config.typ);
+        this.lightid = this.clientConn.register(this, 'light', config.name, '0x0210', config.typ);
 
         if (this.lightid === false) {
-            this.error(RED._("light.errors.light-create"));
-            this.status({fill:"red", shape:"dot", text:RED._("light.errors.light-create")});
+            this.error(RED._('light.errors.light-create'));
+            this.status({fill:'red', shape:'dot', text:RED._('light.errors.light-create')});
             return;
         }
 
@@ -530,12 +530,12 @@ module.exports = function(RED) {
 
         // get a COPY of the light
         this.light = node.clientConn.bridge.dsGetLight(this.lightid);
-        RED.log.debug("LightExtendedColorNode(startup): light = " + JSON.stringify(this.light));
+        RED.log.debug('LightExtendedColorNode(startup): light = ' + JSON.stringify(this.light));
 
-        this.status({fill:"green", shape:"dot", text:"Ready"});
+        this.status({fill:'green', shape:'dot', text:'Ready'});
 
         setTimeout(function(node) {
-            RED.log.debug("LightExtendedColorNode(): initial write");
+            RED.log.debug('LightExtendedColorNode(): initial write');
 
             outputState(node, node.light.state, node.light.state);
         }, 100, node);
@@ -544,7 +544,7 @@ module.exports = function(RED) {
         // light state change
         //
         this.on('light-state-modified', function(id, object) {
-            RED.log.debug("LightExtendedColorNode(light-state-modified): object = " + JSON.stringify(object));
+            RED.log.debug('LightExtendedColorNode(light-state-modified): object = ' + JSON.stringify(object));
             
             var changedState = {};
 
@@ -576,8 +576,8 @@ module.exports = function(RED) {
                 changedState.effect = object.effect;
             }
     
-            this.status({fill:"green", shape:"dot", text:"Light state changed"});
-            setTimeout(function () { node.status({}) }, 3000);
+            this.status({fill:'green', shape:'dot', text:'Light state changed'});
+            setTimeout(function () { node.status({}); }, 3000);
 
             outputState(node, node.light.state, changedState);
             
@@ -588,16 +588,16 @@ module.exports = function(RED) {
         // light modified
         //
         this.on('light-modified', function(id, object) {
-            RED.log.debug("LightExtendedColorNode(light-modified): object = " + JSON.stringify(object));
+            RED.log.debug('LightExtendedColorNode(light-modified): object = ' + JSON.stringify(object));
 
-            this.status({fill:"green", shape:"dot", text:"Light config modified"});
-            setTimeout(function () { node.status({}) }, 3000);
+            this.status({fill:'green', shape:'dot', text:'Light config modified'});
+            setTimeout(function () { node.status({}); }, 3000);
         });
         //
         // respond to inputs from NodeRED
         //
         this.on('input', function (msg) {
-            RED.log.debug("LightExtendedColorNode(input)");
+            RED.log.debug('LightExtendedColorNode(input)');
 
             if (msg.topic.toUpperCase() === 'SETSTATE') {
                 if (typeof msg.payload === 'object') {
@@ -607,7 +607,7 @@ module.exports = function(RED) {
                     
                     return;
                 } else {
-                    RED.log.debug("LightExtendedColorNode(input): typeof payload = " + typeof msg.payload);
+                    RED.log.debug('LightExtendedColorNode(input): typeof payload = ' + typeof msg.payload);
                     return;
                 }
             }
@@ -618,7 +618,7 @@ module.exports = function(RED) {
                 if (typeof msg.payload === 'object') {
                     object = msg.payload;
                 } else {
-                    RED.log.debug("LightExtendedColorNode(input): typeof payload = " + typeof msg.payload);
+                    RED.log.debug('LightExtendedColorNode(input): typeof payload = ' + typeof msg.payload);
                     return;
                 }
 
@@ -669,7 +669,7 @@ module.exports = function(RED) {
                 if (typeof msg.payload === 'object') {
                     object = msg.payload;
                 } else {
-                    RED.log.debug("LightExtendedColorNode(input): typeof payload = " + typeof msg.payload);
+                    RED.log.debug('LightExtendedColorNode(input): typeof payload = ' + typeof msg.payload);
                     return;
                 }
 
@@ -722,7 +722,7 @@ module.exports = function(RED) {
         });
     }
 
-    RED.nodes.registerType("huebridge-light-extcolor", LightExtendedColorNode);
+    RED.nodes.registerType('huebridge-light-extcolor', LightExtendedColorNode);
 
     /******************************************************************************************************************
 	 * 
@@ -736,20 +736,20 @@ module.exports = function(RED) {
         this.clientConn = RED.nodes.getNode(this.client);
 
         if (!this.clientConn) {
-            this.error(RED._("light.errors.missing-config"));
-            this.status({fill:"red", shape:"dot", text:"Missing config"});
+            this.error(RED._('light.errors.missing-config'));
+            this.status({fill:'red', shape:'dot', text:'Missing config'});
             return;
         } else if (typeof this.clientConn.register !== 'function') {
-            this.error(RED._("light.errors.missing-bridge"));
-            this.status({fill:"red", shape:"dot", text:"Missing bridge"});
+            this.error(RED._('light.errors.missing-bridge'));
+            this.status({fill:'red', shape:'dot', text:'Missing bridge'});
             return;            
         }
         
-        this.lightid = this.clientConn.register(this, 'light', config.name, "0x0220", config.typ);
+        this.lightid = this.clientConn.register(this, 'light', config.name, '0x0220', config.typ);
 
         if (this.lightid === false) {
-            this.error(RED._("light.errors.light-create"));
-            this.status({fill:"red", shape:"dot", text:RED._("light.errors.light-create")});
+            this.error(RED._('light.errors.light-create'));
+            this.status({fill:'red', shape:'dot', text:RED._('light.errors.light-create')});
             return;
         }
 
@@ -757,12 +757,12 @@ module.exports = function(RED) {
 
         // get a COPY of the light
         this.light = node.clientConn.bridge.dsGetLight(this.lightid);
-        RED.log.debug("LightColorTemperatureNode(startup): light = " + JSON.stringify(this.light));
+        RED.log.debug('LightColorTemperatureNode(startup): light = ' + JSON.stringify(this.light));
 
-        this.status({fill:"green", shape:"dot", text:"Ready"});
+        this.status({fill:'green', shape:'dot', text:'Ready'});
 
         setTimeout(function(node) {
-            RED.log.debug("LightColorTemperatureNode(): initial write");
+            RED.log.debug('LightColorTemperatureNode(): initial write');
 
             outputState(node, node.light.state, node.light.state);
         }, 100, node);
@@ -771,7 +771,7 @@ module.exports = function(RED) {
         // light state change
         //
         this.on('light-state-modified', function(id, object) {
-            RED.log.debug("LightColorTemperatureNode(light-state-modified): object = " + JSON.stringify(object));
+            RED.log.debug('LightColorTemperatureNode(light-state-modified): object = ' + JSON.stringify(object));
             
             var changedState = {};
 
@@ -794,8 +794,8 @@ module.exports = function(RED) {
                 changedState.effect = object.effect;
             }
 
-            this.status({fill:"green", shape:"dot", text:"Light state changed"});
-            setTimeout(function () { node.status({}) }, 3000);
+            this.status({fill:'green', shape:'dot', text:'Light state changed'});
+            setTimeout(function () { node.status({}); }, 3000);
 
             outputState(node, node.light.state, changedState);
             
@@ -806,16 +806,16 @@ module.exports = function(RED) {
         // light modified
         //
         this.on('light-modified', function(id, object) {
-            RED.log.debug("LightColorTemperatureNode(light-modified): object = " + JSON.stringify(object));
+            RED.log.debug('LightColorTemperatureNode(light-modified): object = ' + JSON.stringify(object));
 
-            this.status({fill:"green", shape:"dot", text:"Light config modified"});
-            setTimeout(function () { node.status({}) }, 3000);
+            this.status({fill:'green', shape:'dot', text:'Light config modified'});
+            setTimeout(function () { node.status({}); }, 3000);
         });
         //
         // respond to inputs from NodeRED
         //
         this.on('input', function (msg) {
-            RED.log.debug("LightColorTemperatureNode(input)");
+            RED.log.debug('LightColorTemperatureNode(input)');
 
             if (msg.topic === 'success') {
                 // this is a message that comes back from the actual device - don't send it, just update the state
@@ -826,7 +826,7 @@ module.exports = function(RED) {
                 if (typeof msg.payload === 'object') {
                     object = msg.payload;
                 } else {
-                    RED.log.debug("LightColorTemperatureNode(input): typeof payload = " + typeof msg.payload);
+                    RED.log.debug('LightColorTemperatureNode(input): typeof payload = ' + typeof msg.payload);
                     return;
                 }
 
@@ -870,7 +870,7 @@ module.exports = function(RED) {
         });
     }
 
-    RED.nodes.registerType("huebridge-light-colortemp", LightColorTemperatureNode);
+    RED.nodes.registerType('huebridge-light-colortemp', LightColorTemperatureNode);
 
     //
     //
@@ -886,11 +886,11 @@ module.exports = function(RED) {
             payload:    changedState
         };
 
-        RED.log.debug("LightNode::outputState(): payload1 = " + JSON.stringify(payload1));
-        RED.log.debug("LightNode::outputState(): payload2 = " + JSON.stringify(payload2));
+        RED.log.debug('LightNode::outputState(): payload1 = ' + JSON.stringify(payload1));
+        RED.log.debug('LightNode::outputState(): payload2 = ' + JSON.stringify(payload2));
 
         node.send(payload2, payload1);
-    }
+    };
     //
     //
     //
@@ -925,4 +925,4 @@ module.exports = function(RED) {
     
         return xy;
     }*/
-}
+};
