@@ -16,115 +16,133 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-module.exports = function(RED) {
+module.exports = function (RED) {
     'use strict';
 
-    /******************************************************************************************************************
-	 * 
-	 *
-	 */
+    /**
+     * ZLL Switch Node.
+     *
+     * @param config Node configuration.
+     * @constructor
+     */
     function ZGPSwitchNode(config) {
         RED.nodes.createNode(this, config);
 
-        this.client     = config.client;
+        this.client = config.client;
         this.clientConn = RED.nodes.getNode(this.client);
-        this.timer      = null;
+        this.timer = null;
 
         if (!this.clientConn) {
             this.error(RED._('zllswitch.errors.missing-config'));
-            this.status({fill:'red', shape:'dot', text:'Missing config'});
+            this.status({fill: 'red', shape: 'dot', text: 'Missing config'});
             return;
         } else if (typeof this.clientConn.register !== 'function') {
             this.error(RED._('zllswitch.errors.missing-bridge'));
-            this.status({fill:'red', shape:'dot', text:'Missing bridge'});
-            return;            
+            this.status({fill: 'red', shape: 'dot', text: 'Missing bridge'});
+            return;
         }
 
         this.switchid = this.clientConn.register(this, 'zll', config.name, 'ZGPSwitch');
 
         if (this.switchid === false) {
             this.error(RED._('zllswitch.errors.create'));
-            this.status({fill:'red', shape:'dot', text:RED._('zllswitch.errors.create')});
+            this.status({fill: 'red', shape: 'dot', text: RED._('zllswitch.errors.create')});
             return;
         }
 
-        var node = this;
-        
-        this.status({fill:'green', shape:'dot', text:'Ready'});
+        const node = this;
 
-        /******************************************************************************************************************
-         * respond to inputs from NodeRED
-         *
+        this.status({fill: 'green', shape: 'dot', text: 'Ready'});
+
+        /*
+         * Respond to inputs from NodeRED.
          */
-        this.on('input', function (msg) {
-            RED.log.debug('ZGPSwitchNode(input): msg = ' + JSON.stringify(msg));
-            RED.log.debug('ZGPSwitchNode(input): typeof payload = ' + typeof msg.payload);
+        this.on(
+            'input',
+            (msg) => {
+                RED.log.debug('ZGPSwitchNode(input): msg = ' + JSON.stringify(msg));
+                RED.log.debug('ZGPSwitchNode(input): typeof payload = ' + typeof msg.payload);
 
-            var buttonid = 0;
+                let buttonid;
 
-            if (typeof msg.payload === 'number') {
-                switch (msg.payload) {
-                    case 1:
-                        buttonid = 34;
-                        node.status({fill:'green', shape:'dot', text:'Button 1'});
-                        setTimeout(function () { node.status({}); }, 5000);
-                        break;
+                if (typeof msg.payload === 'number') {
+                    switch (msg.payload) {
+                        case 1:
+                            buttonid = 34;
+                            node.status({fill: 'green', shape: 'dot', text: 'Button 1'});
+                            setTimeout(function () {
+                                node.status({});
+                            }, 5000);
+                            break;
 
-                    case 2:
-                        buttonid = 16;
-                        node.status({fill:'green', shape:'dot', text:'Button 2'});
-                        setTimeout(function () { node.status({}); }, 5000);
-                        break;
+                        case 2:
+                            buttonid = 16;
+                            node.status({fill: 'green', shape: 'dot', text: 'Button 2'});
+                            setTimeout(function () {
+                                node.status({});
+                            }, 5000);
+                            break;
 
-                    case 3:
-                        buttonid = 17;
-                        node.status({fill:'green', shape:'dot', text:'Button 3'});
-                        setTimeout(function () { node.status({}); }, 5000);
-                        break;
+                        case 3:
+                            buttonid = 17;
+                            node.status({fill: 'green', shape: 'dot', text: 'Button 3'});
+                            setTimeout(function () {
+                                node.status({});
+                            }, 5000);
+                            break;
 
-                    case 4:
-                        buttonid = 18;
-                        node.status({fill:'green', shape:'dot', text:'Button 4'});
-                        setTimeout(function () { node.status({}); }, 5000);
-                        break;
+                        case 4:
+                            buttonid = 18;
+                            node.status({fill: 'green', shape: 'dot', text: 'Button 4'});
+                            setTimeout(function () {
+                                node.status({});
+                            }, 5000);
+                            break;
 
-                    default:
-                        return;                        
+                        default:
+                            return;
+                    }
                 }
-            }
 
-            var obj = node.clientConn.bridge.dsGetSensor(node.switchid);
-            RED.log.debug('ZGPSwitchNode(input): obj = ' + JSON.stringify(obj));
+                const obj = node.clientConn.bridge.dsGetSensor(node.switchid);
+                RED.log.debug('ZGPSwitchNode(input): obj = ' + JSON.stringify(obj));
 
-            obj.state.buttonevent = buttonid;
+                obj.state.buttonevent = buttonid;
 
-            RED.log.debug('ZGPSwitchNode(input): obj = ' + JSON.stringify(obj));
-            node.clientConn.bridge.dsUpdateSensorState(node.switchid, obj.state);
-
-            setTimeout(function(node) {
-                RED.log.debug('ZGPSwitchNode(timer):');
-    
-                var obj = node.clientConn.bridge.dsGetSensor(node.switchid);
-                RED.log.debug('ZGPSwitchNode(timer): obj = ' + JSON.stringify(obj));
-    
-                obj.state.buttonevent = 0;
-    
-                RED.log.debug('ZGPSwitchNode(timer): obj = ' + JSON.stringify(obj));
+                RED.log.debug('ZGPSwitchNode(input): obj = ' + JSON.stringify(obj));
                 node.clientConn.bridge.dsUpdateSensorState(node.switchid, obj.state);
-            }, 1000, node);
-        });
 
-        this.on('close', function(removed, done) {
-            if (removed) {
-                // this node has been deleted
-                node.clientConn.remove(node, 'zll');
-            } else {
-                // this node is being restarted
-                node.clientConn.deregister(node, 'zll');
+                setTimeout(
+                    () => {
+                        RED.log.debug('ZGPSwitchNode(timer):');
+
+                        let o = node.clientConn.bridge.dsGetSensor(node.switchid);
+                        RED.log.debug('ZGPSwitchNode(timer): obj = ' + JSON.stringify(o));
+
+                        o.state.buttonevent = 0;
+
+                        RED.log.debug('ZGPSwitchNode(timer): obj = ' + JSON.stringify(o));
+                        node.clientConn.bridge.dsUpdateSensorState(node.switchid, o.state);
+                    },
+                    1000
+                );
             }
-            
-            done();
-        });
+        );
+
+        this.on(
+            'close',
+            (removed, done) => {
+                if (removed) {
+                    // This node has been deleted.
+                    node.clientConn.remove(node, 'zll');
+                } else {
+                    // This node is being restarted.
+                    node.clientConn.deregister(node, 'zll');
+                }
+
+                done();
+            }
+        );
     }
 
     RED.nodes.registerType('huebridge-zgpswitch', ZGPSwitchNode);

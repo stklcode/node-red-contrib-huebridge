@@ -16,34 +16,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-module.exports = function(RED) {
+module.exports = function (RED) {
     'use strict';
 
-    /******************************************************************************************************************
-	 * 
-	 *
-	 */
+    /**
+     * On/Off Light Node.
+     *
+     * @param config Node configuration.
+     * @constructor
+     */
     function LightOnOffNode(config) {
         RED.nodes.createNode(this, config);
 
-        this.client     = config.client;
+        this.client = config.client;
         this.clientConn = RED.nodes.getNode(this.client);
 
         if (!this.clientConn) {
             this.error(RED._('light.errors.missing-config'));
-            this.status({fill:'red', shape:'dot', text:'Missing config'});
+            this.status({fill: 'red', shape: 'dot', text: 'Missing config'});
             return;
         } else if (typeof this.clientConn.register !== 'function') {
             this.error(RED._('light.errors.missing-bridge'));
-            this.status({fill:'red', shape:'dot', text:'Missing bridge'});
-            return;            
+            this.status({fill: 'red', shape: 'dot', text: 'Missing bridge'});
+            return;
         }
-        
+
         this.lightid = this.clientConn.register(this, 'light', config.name, '0x0000', config.typ);
 
         if (this.lightid === false) {
             this.error(RED._('light.errors.light-create'));
-            this.status({fill:'red', shape:'dot', text:RED._('light.errors.light-create')});
+            this.status({fill: 'red', shape: 'dot', text: RED._('light.errors.light-create')});
             return;
         }
 
@@ -53,174 +55,194 @@ module.exports = function(RED) {
         this.light = node.clientConn.bridge.dsGetLight(this.lightid);
         RED.log.debug('LightOnOffNode(startup): light = ' + JSON.stringify(this.light));
 
-        this.status({fill:'green', shape:'dot', text:'Ready'});
+        this.status({fill: 'green', shape: 'dot', text: 'Ready'});
 
-        setTimeout(function(node) {
-            RED.log.debug('LightOnOffNode(): initial write');
+        setTimeout(
+            () => {
+                RED.log.debug('LightOnOffNode(): initial write');
 
-            outputState(node, node.light.state, node.light.state);
-        }, 100, node);
+                outputState(node, node.light.state, node.light.state);
+            },
+            100
+        );
 
-        //
-        // light state change
-        //
-        this.on('light-state-modified', function(id, object) {
-            RED.log.debug('LightOnOffNode(light-state-modified): object = ' + JSON.stringify(object));
-            
-            var changedState = {};
+        /**
+         * Light state change.
+         */
+        this.on(
+            'light-state-modified',
+            (id, object) => {
+                RED.log.debug('LightOnOffNode(light-state-modified): object = ' + JSON.stringify(object));
 
-            if (object.hasOwnProperty('on')) {
-                changedState.on = object.on;
+                var changedState = {};
+
+                if (Object.prototype.hasOwnProperty.call(object, 'on')) {
+                    changedState.on = object.on;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
+                    changedState.transitiontime = object.transitiontime;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'bri')) {     // well, this doesn't make sense for an on/off light ...
+                    changedState.bri = object.bri;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
+                    changedState.colormode = object.colormode;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
+                    changedState.effect = object.effect;
+                }
+
+                this.status({fill: 'green', shape: 'dot', text: 'Light state changed'});
+                setTimeout(() => node.status({}), 3000);
+
+                outputState(node, node.light.state, changedState);
+
+                // Update our copy.
+                this.light = node.clientConn.bridge.dsGetLight(this.lightid);
             }
-            if (object.hasOwnProperty('transitiontime')) {
-                changedState.transitiontime = object.transitiontime;
+        );
+
+        /**
+         * Light modified.
+         */
+        this.on(
+            'light-modified',
+            (id, object) => {
+                RED.log.debug('LightOnOffNode(light-modified): object = ' + JSON.stringify(object));
+
+                this.status({fill: 'green', shape: 'dot', text: 'Light config modified'});
+                setTimeout(() => node.status({}), 3000);
             }
-            if (object.hasOwnProperty('bri')) {     // well, this doesn't make sense for an on/off light ...
-                changedState.bri = object.bri;
-            }
-            if (object.hasOwnProperty('colormode')) {
-                changedState.colormode = object.colormode;
-            }
-            if (object.hasOwnProperty('effect')) {
-                changedState.effect = object.effect;
-            }
+        );
 
-            this.status({fill:'green', shape:'dot', text:'Light state changed'});
-            setTimeout(function () { node.status({}); }, 3000);
+        /*
+         * Respond to inputs from NodeRED.
+         */
+        this.on(
+            'input',
+            (msg) => {
+                RED.log.debug('LightOnOffNode(input)');
 
-            outputState(node, node.light.state, changedState);
-            
-            // update our copy
-            this.light = node.clientConn.bridge.dsGetLight(this.lightid);
-        });
-        //
-        // light modified
-        //
-        this.on('light-modified', function(id, object) {
-            RED.log.debug('LightOnOffNode(light-modified): object = ' + JSON.stringify(object));
+                if (msg.topic === 'success' || msg.topic.toUpperCase() === 'SETSTATE') {
+                    var object = {};
 
-            this.status({fill:'green', shape:'dot', text:'Light config modified'});
-            setTimeout(function () { node.status({}); }, 3000);
-        });
-        //
-        // respond to inputs from NodeRED
-        //
-        this.on('input', function (msg) {
-            RED.log.debug('LightOnOffNode(input)');
+                    if (typeof msg.payload === 'object') {
+                        object = msg.payload;
+                    } else {
+                        RED.log.debug('LightOnOffNode(input): typeof payload = ' + typeof msg.payload);
+                        return;
+                    }
 
-            if (msg.topic === 'success' || msg.topic.toUpperCase() === 'SETSTATE') {
-                var object = {};
+                    if (Object.prototype.hasOwnProperty.call(object, 'on')) {
+                        node.light.state.on = object.on;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
+                        node.light.state.transitiontime = object.transitiontime;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
+                        node.light.state.bri = object.bri;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
+                        node.light.state.colormode = object.colormode;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
+                        node.light.state.effect = object.effect;
+                    }
 
-                if (typeof msg.payload === 'object') {
-                    object = msg.payload;
-                } else {
-                    RED.log.debug('LightOnOffNode(input): typeof payload = ' + typeof msg.payload);
-                    return;
+                    node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+
+                    if (msg.topic.toUpperCase() === 'SETSTATE') {
+                        process.nextTick(() => node.emit('light-state-modified', node.lightid, node.light.state));
+                    }
                 }
 
-                if (object.hasOwnProperty('on')) {
-                    node.light.state.on = object.on;
-                }
-                if (object.hasOwnProperty('transitiontime')) {
-                    node.light.state.transitiontime = object.transitiontime;
-                }
-                if (object.hasOwnProperty('bri')) {
-                    node.light.state.bri = object.bri;
-                }
-                if (object.hasOwnProperty('colormode')) {
-                    node.light.state.colormode = object.colormode;
-                }
-                if (object.hasOwnProperty('effect')) {
-                    node.light.state.effect = object.effect;
-                }
+                /*if (msg.topic === 'success') {
+                    // this is a message that comes back from the actual device - don't send it, just update the state
+                    // ....
+                } else if (msg.topic.toUpperCase() === 'SETSTATE') {
+                    var object = {};
 
-                node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+                    if (typeof msg.payload === 'object') {
+                        object = msg.payload;
+                    } else {
+                        RED.log.debug('LightOnOffNode(input): typeof payload = ' + typeof msg.payload);
+                        return;
+                    }
 
-                if (msg.topic.toUpperCase() === 'SETSTATE') {
+                    if (Object.prototype.hasOwnProperty.call(object, 'on')) {
+                        node.light.state.on = object.on;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
+                        node.light.state.transitiontime = object.transitiontime;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
+                        node.light.state.bri = object.bri;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
+                        node.light.state.colormode = object.colormode;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
+                        node.light.state.effect = object.effect;
+                    }
+
+                    node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+
                     process.nextTick(() => {
                         node.emit('light-state-modified', node.lightid, node.light.state);
                     });
-                }
+                }*/
             }
+        );
 
-            /*if (msg.topic === 'success') {
-                // this is a message that comes back from the actual device - don't send it, just update the state
-                // ....
-            } else if (msg.topic.toUpperCase() === 'SETSTATE') {
-                var object = {};
-
-                if (typeof msg.payload === 'object') {
-                    object = msg.payload;
+        /**
+         * Close node.
+         */
+        this.on(
+            'close',
+            (removed, done) => {
+                if (removed) {
+                    // this node has been deleted
+                    node.clientConn.remove(node, 'light');
                 } else {
-                    RED.log.debug('LightOnOffNode(input): typeof payload = ' + typeof msg.payload);
-                    return;
+                    // this node is being restarted
+                    node.clientConn.deregister(node, 'light');
                 }
 
-                if (object.hasOwnProperty('on')) {
-                    node.light.state.on = object.on;
-                }
-                if (object.hasOwnProperty('transitiontime')) {
-                    node.light.state.transitiontime = object.transitiontime;
-                }
-                if (object.hasOwnProperty('bri')) {
-                    node.light.state.bri = object.bri;
-                }
-                if (object.hasOwnProperty('colormode')) {
-                    node.light.state.colormode = object.colormode;
-                }
-                if (object.hasOwnProperty('effect')) {
-                    node.light.state.effect = object.effect;
-                }
-
-                node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
-
-                process.nextTick(() => {
-                    node.emit('light-state-modified', node.lightid, node.light.state);
-                });
-            }*/
-        });
-
-        this.on('close', function(removed, done) {
-            if (removed) {
-                // this node has been deleted
-                node.clientConn.remove(node, 'light');
-            } else {
-                // this node is being restarted
-                node.clientConn.deregister(node, 'light');
+                done();
             }
-            
-            done();
-        });
+        );
     }
 
     RED.nodes.registerType('huebridge-light-onoff', LightOnOffNode);
 
-    /******************************************************************************************************************
-	 * 
-	 *
-	 */
+    /**
+     * Dimmable Light Node.
+     *
+     * @param config Node configuration.
+     * @constructor
+     */
     function LightDimmableNode(config) {
         RED.nodes.createNode(this, config);
 
-        this.timer      = null;
-        this.client     = config.client;
+        this.timer = null;
+        this.client = config.client;
         this.clientConn = RED.nodes.getNode(this.client);
 
         if (!this.clientConn) {
             this.error(RED._('light.errors.missing-config'));
-            this.status({fill:'red', shape:'dot', text:'Missing config'});
+            this.status({fill: 'red', shape: 'dot', text: 'Missing config'});
             return;
         } else if (typeof this.clientConn.register !== 'function') {
             this.error(RED._('light.errors.missing-bridge'));
-            this.status({fill:'red', shape:'dot', text:'Missing bridge'});
-            return;            
+            this.status({fill: 'red', shape: 'dot', text: 'Missing bridge'});
+            return;
         }
-        
+
         this.lightid = this.clientConn.register(this, 'light', config.name, '0x0100', config.typ);
 
         if (this.lightid === false) {
             this.error(RED._('light.errors.light-create'));
-            this.status({fill:'red', shape:'dot', text:RED._('light.errors.light-create')});
+            this.status({fill: 'red', shape: 'dot', text: RED._('light.errors.light-create')});
             return;
         }
 
@@ -230,133 +252,153 @@ module.exports = function(RED) {
         this.light = node.clientConn.bridge.dsGetLight(this.lightid);
         RED.log.debug('LightDimmableNode(startup): light = ' + JSON.stringify(this.light));
 
-        this.status({fill:'green', shape:'dot', text:'Ready'});
+        this.status({fill: 'green', shape: 'dot', text: 'Ready'});
 
-        setTimeout(function(node) {
-            RED.log.debug('LightDimmableNode(): initial write');
+        setTimeout(
+            () => {
+                RED.log.debug('LightDimmableNode(): initial write');
 
-            outputState(node, node.light.state, node.light.state);
-        }, 100, node);
+                outputState(node, node.light.state, node.light.state);
+            },
+            100
+        );
 
-        //
-        // light state change
-        //
-        this.on('light-state-modified', function(id, object) {
-            RED.log.debug('LightDimmableNode(light-state-modified): object = ' + JSON.stringify(object));
-            
-            var changedState = {};
+        /**
+         * Light state change.
+         */
+        this.on(
+            'light-state-modified',
+            (id, object) => {
+                RED.log.debug('LightDimmableNode(light-state-modified): object = ' + JSON.stringify(object));
 
-            if (object.hasOwnProperty('on')) {
-                changedState.on = object.on;
+                var changedState = {};
+
+                if (Object.prototype.hasOwnProperty.call(object, 'on')) {
+                    changedState.on = object.on;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
+                    changedState.transitiontime = object.transitiontime;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
+                    changedState.bri = object.bri;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
+                    changedState.effect = object.effect;
+                }
+
+                this.status({fill: 'green', shape: 'dot', text: 'Light state changed'});
+                setTimeout(() => node.status({}), 3000);
+
+                outputState(node, node.light.state, changedState);
+
+                // Update our copy.
+                this.light = node.clientConn.bridge.dsGetLight(this.lightid);
             }
-            if (object.hasOwnProperty('transitiontime')) {
-                changedState.transitiontime = object.transitiontime;
+        );
+
+        /**
+         * Light modified.
+         */
+        this.on(
+            'light-modified',
+            (id, object) => {
+                RED.log.debug('LightDimmableNode(light-modified): object = ' + JSON.stringify(object));
+
+                this.status({fill: 'green', shape: 'dot', text: 'Light config modified'});
+                setTimeout(() => node.status({}), 3000);
             }
-            if (object.hasOwnProperty('bri')) {
-                changedState.bri = object.bri;
+        );
+
+        /*
+         * Respond to inputs from NodeRED.
+         */
+        this.on(
+            'input',
+            (msg) => {
+                RED.log.debug('LightDimmableNode(input)');
+
+                if (msg.topic === 'success') {
+                    // this is a message that comes back from the actual device - don't send it, just update the state
+                    // ....
+                } else if (msg.topic.toUpperCase() === 'setstate') {
+                    var object = {};
+
+                    if (typeof msg.payload === 'object') {
+                        object = msg.payload;
+                    } else {
+                        RED.log.debug('LightExtendedColorNode(input): typeof payload = ' + typeof msg.payload);
+                        return;
+                    }
+
+                    if (Object.prototype.hasOwnProperty.call(object, 'on')) {
+                        node.light.state.on = object.on;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
+                        node.light.state.transitiontime = object.transitiontime;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
+                        node.light.state.bri = object.bri;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
+                        node.light.state.effect = object.effect;
+                    }
+
+                    node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+
+                    process.nextTick(() => node.emit('light-state-modified', node.lightid, node.light.state));
+                }
             }
-            if (object.hasOwnProperty('effect')) {
-                changedState.effect = object.effect;
-            }
-    
-            this.status({fill:'green', shape:'dot', text:'Light state changed'});
-            setTimeout(function () { node.status({}); }, 3000);
+        );
 
-            outputState(node, node.light.state, changedState);
-            
-            // update our copy
-            this.light = node.clientConn.bridge.dsGetLight(this.lightid);
-        });
-        //
-        // light modified
-        //
-        this.on('light-modified', function(id, object) {
-            RED.log.debug('LightDimmableNode(light-modified): object = ' + JSON.stringify(object));
-
-            this.status({fill:'green', shape:'dot', text:'Light config modified'});
-            setTimeout(function () { node.status({}); }, 3000);
-        });
-        //
-        // respond to inputs from NodeRED
-        //
-        this.on('input', function (msg) {
-            RED.log.debug('LightDimmableNode(input)');
-
-            if (msg.topic === 'success') {
-                // this is a message that comes back from the actual device - don't send it, just update the state
-                // ....
-            } else if (msg.topic.toUpperCase() === 'setstate') {
-                var object = {};
-
-                if (typeof msg.payload === 'object') {
-                    object = msg.payload;
+        /**
+         * Close node.
+         */
+        this.on(
+            'close',
+            (removed, done) => {
+                if (removed) {
+                    // this node has been deleted
+                    node.clientConn.remove(node, 'light');
                 } else {
-                    RED.log.debug('LightExtendedColorNode(input): typeof payload = ' + typeof msg.payload);
-                    return;
+                    // this node is being restarted
+                    node.clientConn.deregister(node, 'light');
                 }
 
-                if (object.hasOwnProperty('on')) {
-                    node.light.state.on = object.on;
-                }
-                if (object.hasOwnProperty('transitiontime')) {
-                    node.light.state.transitiontime = object.transitiontime;
-                }
-                if (object.hasOwnProperty('bri')) {
-                    node.light.state.bri = object.bri;
-                }
-                if (object.hasOwnProperty('effect')) {
-                    node.light.state.effect = object.effect;
-                }
-
-                node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
-
-                process.nextTick(() => {
-                    node.emit('light-state-modified', node.lightid, node.light.state);
-                });                
+                done();
             }
-        });
-
-        this.on('close', function(removed, done) {
-            if (removed) {
-                // this node has been deleted
-                node.clientConn.remove(node, 'light');
-            } else {
-                // this node is being restarted
-                node.clientConn.deregister(node, 'light');
-            }
-            
-            done();
-        });
+        );
     }
 
     RED.nodes.registerType('huebridge-light-dimmable', LightDimmableNode);
 
-    /******************************************************************************************************************
-	 * 
-	 *
-	 */
+    /**
+     * Color Light Node.
+     *
+     * @param config Node configuration.
+     * @constructor
+     */
     function LightColorNode(config) {
         RED.nodes.createNode(this, config);
 
-        this.timer      = null;
-        this.client     = config.client;
+        this.timer = null;
+        this.client = config.client;
         this.clientConn = RED.nodes.getNode(this.client);
 
         if (!this.clientConn) {
             this.error(RED._('light.errors.missing-config'));
-            this.status({fill:'red', shape:'dot', text:'Missing config'});
+            this.status({fill: 'red', shape: 'dot', text: 'Missing config'});
             return;
         } else if (typeof this.clientConn.register !== 'function') {
             this.error(RED._('light.errors.missing-bridge'));
-            this.status({fill:'red', shape:'dot', text:'Missing bridge'});
-            return;            
+            this.status({fill: 'red', shape: 'dot', text: 'Missing bridge'});
+            return;
         }
-        
+
         this.lightid = this.clientConn.register(this, 'light', config.name, '0x0200', config.typ);
 
         if (this.lightid === false) {
             this.error(RED._('light.errors.light-create'));
-            this.status({fill:'red', shape:'dot', text:RED._('light.errors.light-create')});
+            this.status({fill: 'red', shape: 'dot', text: RED._('light.errors.light-create')});
             return;
         }
 
@@ -366,163 +408,183 @@ module.exports = function(RED) {
         this.light = node.clientConn.bridge.dsGetLight(this.lightid);
         RED.log.debug('LightColorNode(startup): light = ' + JSON.stringify(this.light));
 
-        this.status({fill:'green', shape:'dot', text:'Ready'});
+        this.status({fill: 'green', shape: 'dot', text: 'Ready'});
 
-        setTimeout(function(node) {
-            RED.log.debug('LightColorNode(): initial write');
+        setTimeout(
+            () => {
+                RED.log.debug('LightColorNode(): initial write');
 
-            outputState(node, node.light.state, node.light.state);
-        }, 100, node);
+                outputState(node, node.light.state, node.light.state);
+            },
+            100
+        );
 
-        //
-        // light state change
-        //
-        this.on('light-state-modified', function(id, object) {
-            RED.log.debug('LightColorNode(light-state-modified): object = ' + JSON.stringify(object));
-            
-            var changedState = {};
+        /**
+         * Light state change.
+         */
+        this.on(
+            'light-state-modified',
+            (id, object) => {
+                RED.log.debug('LightColorNode(light-state-modified): object = ' + JSON.stringify(object));
 
-            if (object.hasOwnProperty('on')) {
-                changedState.on = object.on;
-            }
-            if (object.hasOwnProperty('transitiontime')) {
-                changedState.transitiontime = object.transitiontime;
-            }
-            if (object.hasOwnProperty('bri')) {
-                changedState.bri = object.bri;
-            }
-            if (object.hasOwnProperty('hue')) {
-                changedState.hue = object.hue;
-            }
-            if (object.hasOwnProperty('sat')) {
-                changedState.sat = object.sat;
-            }
-            if (object.hasOwnProperty('ct')) {
-                changedState.ct = object.ct;
-            }
-            if (object.hasOwnProperty('xy')) {
-                changedState.xy = object.xy;
-            }
-            if (object.hasOwnProperty('colormode')) {
-                changedState.colormode = object.colormode;
-            }
-            if (object.hasOwnProperty('effect')) {
-                changedState.effect = object.effect;
-            }
-    
-            this.status({fill:'green', shape:'dot', text:'Light state changed'});
-            setTimeout(function () { node.status({}); }, 3000);
+                var changedState = {};
 
-            outputState(node, node.light.state, changedState);
-            
-            // update our copy
-            this.light = node.clientConn.bridge.dsGetLight(this.lightid);
-        });
-        //
-        // light modified
-        //
-        this.on('light-modified', function(id, object) {
-            RED.log.debug('LightColorNode(light-modified): object = ' + JSON.stringify(object));
+                if (Object.prototype.hasOwnProperty.call(object, 'on')) {
+                    changedState.on = object.on;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
+                    changedState.transitiontime = object.transitiontime;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
+                    changedState.bri = object.bri;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'hue')) {
+                    changedState.hue = object.hue;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'sat')) {
+                    changedState.sat = object.sat;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'ct')) {
+                    changedState.ct = object.ct;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'xy')) {
+                    changedState.xy = object.xy;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
+                    changedState.colormode = object.colormode;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
+                    changedState.effect = object.effect;
+                }
 
-            this.status({fill:'green', shape:'dot', text:'Light config modified'});
-            setTimeout(function () { node.status({}); }, 3000);
-        });
-        //
-        // respond to inputs from NodeRED
-        //
-        this.on('input', function (msg) {
-            RED.log.debug('LightColorNode(input)');
+                this.status({fill: 'green', shape: 'dot', text: 'Light state changed'});
+                setTimeout(() => node.status({}), 3000);
 
-            if (msg.topic === 'success') {
-                // this is a message that comes back from the actual device - don't send it, just update the state
-            } else if (msg.topic.toUpperCase() === 'SETSTATE') {
-                var object = {};
+                outputState(node, node.light.state, changedState);
 
-                if (typeof msg.payload === 'object') {
-                    object = msg.payload;
+                // Update our copy.
+                this.light = node.clientConn.bridge.dsGetLight(this.lightid);
+            }
+        );
+
+        /**
+         * Light modified.
+         */
+        this.on(
+            'light-modified',
+            (id, object) => {
+                RED.log.debug('LightColorNode(light-modified): object = ' + JSON.stringify(object));
+
+                this.status({fill: 'green', shape: 'dot', text: 'Light config modified'});
+                setTimeout(() => node.status({}), 3000);
+            }
+        );
+
+        /*
+         * Respond to inputs from NodeRED.
+         */
+        this.on(
+            'input',
+            (msg) => {
+                RED.log.debug('LightColorNode(input)');
+
+                if (msg.topic === 'success') {
+                    // this is a message that comes back from the actual device - don't send it, just update the state
+                } else if (msg.topic.toUpperCase() === 'SETSTATE') {
+                    var object = {};
+
+                    if (typeof msg.payload === 'object') {
+                        object = msg.payload;
+                    } else {
+                        RED.log.debug('LightColorNode(input): typeof payload = ' + typeof msg.payload);
+                        return;
+                    }
+
+                    if (Object.prototype.hasOwnProperty.call(object, 'on')) {
+                        node.light.state.on = object.on;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
+                        node.light.state.transitiontime = object.transitiontime;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
+                        node.light.state.bri = object.bri;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'hue')) {
+                        node.light.state.hue = object.hue;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'sat')) {
+                        node.light.state.sat = object.sat;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'ct')) {
+                        node.light.state.ct = object.ct;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'xy')) {
+                        node.light.state.xy = object.xy;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
+                        node.light.state.colormode = object.colormode;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
+                        node.light.state.effect = object.effect;
+                    }
+
+                    node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+
+                    process.nextTick(() => node.emit('light-state-modified', node.lightid, node.light.state));
+                }
+            }
+        );
+
+        /**
+         * Close node.
+         */
+        this.on(
+            'close',
+            (removed, done) => {
+                if (removed) {
+                    // this node has been deleted
+                    node.clientConn.remove(node, 'light');
                 } else {
-                    RED.log.debug('LightColorNode(input): typeof payload = ' + typeof msg.payload);
-                    return;
+                    // this node is being restarted
+                    node.clientConn.deregister(node, 'light');
                 }
 
-                if (object.hasOwnProperty('on')) {
-                    node.light.state.on = object.on;
-                }
-                if (object.hasOwnProperty('transitiontime')) {
-                    node.light.state.transitiontime = object.transitiontime;
-                }
-                if (object.hasOwnProperty('bri')) {
-                    node.light.state.bri = object.bri;
-                }
-                if (object.hasOwnProperty('hue')) {
-                    node.light.state.hue = object.hue;
-                }
-                if (object.hasOwnProperty('sat')) {
-                    node.light.state.sat = object.sat;
-                }
-                if (object.hasOwnProperty('ct')) {
-                    node.light.state.ct = object.ct;
-                }
-                if (object.hasOwnProperty('xy')) {
-                    node.light.state.xy = object.xy;
-                }
-                if (object.hasOwnProperty('colormode')) {
-                    node.light.state.colormode = object.colormode;
-                }
-                if (object.hasOwnProperty('effect')) {
-                    node.light.state.effect = object.effect;
-                }
-
-                node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
-
-                process.nextTick(() => {
-                    node.emit('light-state-modified', node.lightid, node.light.state);
-                });                
+                done();
             }
-        });
-
-        this.on('close', function(removed, done) {
-            if (removed) {
-                // this node has been deleted
-                node.clientConn.remove(node, 'light');
-            } else {
-                // this node is being restarted
-                node.clientConn.deregister(node, 'light');
-            }
-            
-            done();
-        });
+        );
     }
 
     RED.nodes.registerType('huebridge-light-color', LightColorNode);
 
-    /******************************************************************************************************************
-	 * 
-	 *
-	 */
+    /**
+     * Extended Color Light Node.
+     *
+     * @param config Node configuration.
+     * @constructor
+     */
     function LightExtendedColorNode(config) {
         RED.nodes.createNode(this, config);
 
-        this.client     = config.client;
+        this.client = config.client;
         this.clientConn = RED.nodes.getNode(this.client);
 
         if (!this.clientConn) {
             this.error(RED._('light.errors.missing-config'));
-            this.status({fill:'red', shape:'dot', text:'Missing config'});
+            this.status({fill: 'red', shape: 'dot', text: 'Missing config'});
             return;
         } else if (typeof this.clientConn.register !== 'function') {
             this.error(RED._('light.errors.missing-bridge'));
-            this.status({fill:'red', shape:'dot', text:'Missing bridge'});
-            return;            
+            this.status({fill: 'red', shape: 'dot', text: 'Missing bridge'});
+            return;
         }
 
         RED.log.debug('LightExtendedColorNode(startup): config.typ = ' + config.typ);
-        
+
         this.lightid = this.clientConn.register(this, 'light', config.name, '0x0210', config.typ);
 
         if (this.lightid === false) {
             this.error(RED._('light.errors.light-create'));
-            this.status({fill:'red', shape:'dot', text:RED._('light.errors.light-create')});
+            this.status({fill: 'red', shape: 'dot', text: RED._('light.errors.light-create')});
             return;
         }
 
@@ -532,138 +594,151 @@ module.exports = function(RED) {
         this.light = node.clientConn.bridge.dsGetLight(this.lightid);
         RED.log.debug('LightExtendedColorNode(startup): light = ' + JSON.stringify(this.light));
 
-        this.status({fill:'green', shape:'dot', text:'Ready'});
+        this.status({fill: 'green', shape: 'dot', text: 'Ready'});
 
-        setTimeout(function(node) {
-            RED.log.debug('LightExtendedColorNode(): initial write');
+        setTimeout(
+            () => {
+                RED.log.debug('LightExtendedColorNode(): initial write');
 
-            outputState(node, node.light.state, node.light.state);
-        }, 100, node);
+                outputState(node, node.light.state, node.light.state);
+            },
+            100
+        );
 
-        //
-        // light state change
-        //
-        this.on('light-state-modified', function(id, object) {
-            RED.log.debug('LightExtendedColorNode(light-state-modified): object = ' + JSON.stringify(object));
-            
-            var changedState = {};
+        /**
+         * Light state change.
+         */
+        this.on(
+            'light-state-modified',
+            (id, object) => {
+                RED.log.debug('LightExtendedColorNode(light-state-modified): object = ' + JSON.stringify(object));
 
-            if (object.hasOwnProperty('on')) {
-                changedState.on = object.on;
-            }
-            if (object.hasOwnProperty('transitiontime')) {
-                changedState.transitiontime = object.transitiontime;
-            }
-            if (object.hasOwnProperty('bri')) {
-                changedState.bri = object.bri;
-            }
-            if (object.hasOwnProperty('hue')) {
-                changedState.hue = object.hue;
-            }
-            if (object.hasOwnProperty('sat')) {
-                changedState.sat = object.sat;
-            }
-            if (object.hasOwnProperty('ct')) {
-                changedState.ct = object.ct;
-            }
-            if (object.hasOwnProperty('xy')) {
-                changedState.xy = object.xy;
-            }
-            if (object.hasOwnProperty('colormode')) {
-                changedState.colormode = object.colormode;
-            }
-            if (object.hasOwnProperty('effect')) {
-                changedState.effect = object.effect;
-            }
-    
-            this.status({fill:'green', shape:'dot', text:'Light state changed'});
-            setTimeout(function () { node.status({}); }, 3000);
+                var changedState = {};
 
-            outputState(node, node.light.state, changedState);
-            
-            // update our copy
-            this.light = node.clientConn.bridge.dsGetLight(this.lightid);
-        });
-        //
-        // light modified
-        //
-        this.on('light-modified', function(id, object) {
-            RED.log.debug('LightExtendedColorNode(light-modified): object = ' + JSON.stringify(object));
-
-            this.status({fill:'green', shape:'dot', text:'Light config modified'});
-            setTimeout(function () { node.status({}); }, 3000);
-        });
-        //
-        // respond to inputs from NodeRED
-        //
-        this.on('input', function (msg) {
-            RED.log.debug('LightExtendedColorNode(input)');
-
-            if (msg.topic.toUpperCase() === 'SETSTATE') {
-                if (typeof msg.payload === 'object') {
-                    process.nextTick(() => {
-                        node.emit('light-state-modified', node.lightid, msg.payload);
-                    });
-                    
-                    return;
-                } else {
-                    RED.log.debug('LightExtendedColorNode(input): typeof payload = ' + typeof msg.payload);
-                    return;
+                if (Object.prototype.hasOwnProperty.call(object, 'on')) {
+                    changedState.on = object.on;
                 }
-            }
-
-            if (msg.topic === 'success' || msg.topic.toUpperCase() === 'SETSTATE') {
-                var object = {};
-
-                if (typeof msg.payload === 'object') {
-                    object = msg.payload;
-                } else {
-                    RED.log.debug('LightExtendedColorNode(input): typeof payload = ' + typeof msg.payload);
-                    return;
+                if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
+                    changedState.transitiontime = object.transitiontime;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
+                    changedState.bri = object.bri;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'hue')) {
+                    changedState.hue = object.hue;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'sat')) {
+                    changedState.sat = object.sat;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'ct')) {
+                    changedState.ct = object.ct;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'xy')) {
+                    changedState.xy = object.xy;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
+                    changedState.colormode = object.colormode;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
+                    changedState.effect = object.effect;
                 }
 
-                if (object.hasOwnProperty('on')) {
-                    node.light.state.on = object.on;
-                }
-                if (object.hasOwnProperty('transitiontime')) {
-                    node.light.state.transitiontime = object.transitiontime;
-                }
-                if (object.hasOwnProperty('bri')) {
-                    node.light.state.bri = object.bri;
-                }
-                if (object.hasOwnProperty('hue')) {
-                    node.light.state.hue = object.hue;
-                }
-                if (object.hasOwnProperty('sat')) {
-                    node.light.state.sat = object.sat;
-                }
-                if (object.hasOwnProperty('ct')) {
-                    node.light.state.ct = object.ct;
-                }
-                if (object.hasOwnProperty('xy')) {
-                    node.light.state.xy = object.xy;
-                }
-                if (object.hasOwnProperty('colormode')) {
-                    node.light.state.colormode = object.colormode;
-                }
-                if (object.hasOwnProperty('effect')) {
-                    node.light.state.effect = object.effect;
-                }
+                this.status({fill: 'green', shape: 'dot', text: 'Light state changed'});
+                setTimeout(() => node.status({}), 3000);
 
-                node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+                outputState(node, node.light.state, changedState);
 
-                /*if (msg.topic.toUpperCase() === 'SETSTATE') {
-                    process.nextTick(() => {
-                        node.emit('light-state-modified', node.lightid, node.light.state);
-                    });
-                }*/
+                // Update our copy.
+                this.light = node.clientConn.bridge.dsGetLight(this.lightid);
             }
+        );
+
+        /**
+         * Light modified.
+         */
+        this.on(
+            'light-modified',
+            (id, object) => {
+                RED.log.debug('LightExtendedColorNode(light-modified): object = ' + JSON.stringify(object));
+
+                this.status({fill: 'green', shape: 'dot', text: 'Light config modified'});
+                setTimeout(() => node.status({}), 3000);
+            }
+        );
+
+        /*
+         * Respond to inputs from NodeRED.
+         */
+        this.on(
+            'input',
+            (msg) => {
+                RED.log.debug('LightExtendedColorNode(input)');
+
+                if (msg.topic.toUpperCase() === 'SETSTATE') {
+                    if (typeof msg.payload === 'object') {
+                        process.nextTick(() => {
+                            node.emit('light-state-modified', node.lightid, msg.payload);
+                        });
+
+                        return;
+                    } else {
+                        RED.log.debug('LightExtendedColorNode(input): typeof payload = ' + typeof msg.payload);
+                        return;
+                    }
+                }
+
+                if (msg.topic === 'success' || msg.topic.toUpperCase() === 'SETSTATE') {
+                    var object = {};
+
+                    if (typeof msg.payload === 'object') {
+                        object = msg.payload;
+                    } else {
+                        RED.log.debug('LightExtendedColorNode(input): typeof payload = ' + typeof msg.payload);
+                        return;
+                    }
+
+                    if (Object.prototype.hasOwnProperty.call(object, 'on')) {
+                        node.light.state.on = object.on;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
+                        node.light.state.transitiontime = object.transitiontime;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
+                        node.light.state.bri = object.bri;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'hue')) {
+                        node.light.state.hue = object.hue;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'sat')) {
+                        node.light.state.sat = object.sat;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'ct')) {
+                        node.light.state.ct = object.ct;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'xy')) {
+                        node.light.state.xy = object.xy;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
+                        node.light.state.colormode = object.colormode;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
+                        node.light.state.effect = object.effect;
+                    }
+
+                    node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+
+                    /*if (msg.topic.toUpperCase() === 'SETSTATE') {
+                        process.nextTick(() => {
+                            node.emit('light-state-modified', node.lightid, node.light.state);
+                        });
+                    }*/
+                }
 
 
-            //if (msg.topic === 'success') {
+                //if (msg.topic === 'success') {
                 // this is a message that comes back from the actual device - don't send it, just update the state
                 // ....
-            //} else if (msg.topic.toUpperCase() === 'SETSTATE') {
+                //} else if (msg.topic.toUpperCase() === 'SETSTATE') {
                 /*var object = {};
 
                 if (typeof msg.payload === 'object') {
@@ -673,83 +748,92 @@ module.exports = function(RED) {
                     return;
                 }
 
-                if (object.hasOwnProperty('on')) {
+                if (Object.prototype.hasOwnProperty.call(object, 'on')) {
                     node.light.state.on = object.on;
                 }
-                if (object.hasOwnProperty('transitiontime')) {
+                if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
                     node.light.state.transitiontime = object.transitiontime;
                 }
-                if (object.hasOwnProperty('bri')) {
+                if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
                     node.light.state.bri = object.bri;
                 }
-                if (object.hasOwnProperty('hue')) {
+                if (Object.prototype.hasOwnProperty.call(object, 'hue')) {
                     node.light.state.hue = object.hue;
                 }
-                if (object.hasOwnProperty('sat')) {
+                if (Object.prototype.hasOwnProperty.call(object, 'sat')) {
                     node.light.state.sat = object.sat;
                 }
-                if (object.hasOwnProperty('ct')) {
+                if (Object.prototype.hasOwnProperty.call(object, 'ct')) {
                     node.light.state.ct = object.ct;
                 }
-                if (object.hasOwnProperty('xy')) {
+                if (Object.prototype.hasOwnProperty.call(object, 'xy')) {
                     node.light.state.xy = object.xy;
                 }
-                if (object.hasOwnProperty('colormode')) {
+                if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
                     node.light.state.colormode = object.colormode;
                 }
-                if (object.hasOwnProperty('effect')) {
+                if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
                     node.light.state.effect = object.effect;
                 }
 
                 node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);*/
 
-            //    process.nextTick(() => {
-            //        node.emit('light-state-modified', node.lightid, node.light.state);
-            //    });
-            //}
-        });
-
-        this.on('close', function(removed, done) {
-            if (removed) {
-                // this node has been deleted
-                node.clientConn.remove(node, 'light');
-            } else {
-                // this node is being restarted
-                node.clientConn.deregister(node, 'light');
+                //    process.nextTick(() => {
+                //        node.emit('light-state-modified', node.lightid, node.light.state);
+                //    });
+                //}
             }
-            
-            done();
-        });
+        );
+
+        /**
+         * Close node.
+         */
+        this.on(
+            'close',
+            (removed, done) => {
+                if (removed) {
+                    // this node has been deleted
+                    node.clientConn.remove(node, 'light');
+                } else {
+                    // this node is being restarted
+                    node.clientConn.deregister(node, 'light');
+                }
+
+                done();
+            }
+        );
     }
 
     RED.nodes.registerType('huebridge-light-extcolor', LightExtendedColorNode);
 
-    /******************************************************************************************************************
-	 * 
-	 *
-	 */
+    /**
+     * Color Temperature Light Node.
+     *
+     * @param config Node configuration.
+     * @constructor
+     */
     function LightColorTemperatureNode(config) {
         RED.nodes.createNode(this, config);
 
-        this.timer      = null;
-        this.client     = config.client;
+        this.timer = null;
+        this.client = config.client;
         this.clientConn = RED.nodes.getNode(this.client);
 
         if (!this.clientConn) {
             this.error(RED._('light.errors.missing-config'));
-            this.status({fill:'red', shape:'dot', text:'Missing config'});
+            this.status({fill: 'red', shape: 'dot', text: 'Missing config'});
             return;
         } else if (typeof this.clientConn.register !== 'function') {
             this.error(RED._('light.errors.missing-bridge'));
-            this.status({fill:'red', shape:'dot', text:'Missing bridge'});
-            return;            
+            this.status({fill: 'red', shape: 'dot', text: 'Missing bridge'});
+            return;
         }
-        
+
         this.lightid = this.clientConn.register(this, 'light', config.name, '0x0220', config.typ);
 
         if (this.lightid === false) {
             this.error(RED._('light.errors.light-create'));
-            this.status({fill:'red', shape:'dot', text:RED._('light.errors.light-create')});
+            this.status({fill: 'red', shape: 'dot', text: RED._('light.errors.light-create')});
             return;
         }
 
@@ -759,131 +843,152 @@ module.exports = function(RED) {
         this.light = node.clientConn.bridge.dsGetLight(this.lightid);
         RED.log.debug('LightColorTemperatureNode(startup): light = ' + JSON.stringify(this.light));
 
-        this.status({fill:'green', shape:'dot', text:'Ready'});
+        this.status({fill: 'green', shape: 'dot', text: 'Ready'});
 
-        setTimeout(function(node) {
-            RED.log.debug('LightColorTemperatureNode(): initial write');
+        setTimeout(
+            () => {
+                RED.log.debug('LightColorTemperatureNode(): initial write');
 
-            outputState(node, node.light.state, node.light.state);
-        }, 100, node);
+                outputState(node, node.light.state, node.light.state);
+            },
+            100
+        );
 
-        //
-        // light state change
-        //
-        this.on('light-state-modified', function(id, object) {
-            RED.log.debug('LightColorTemperatureNode(light-state-modified): object = ' + JSON.stringify(object));
-            
-            var changedState = {};
+        /**
+         * Light state change.
+         */
+        this.on(
+            'light-state-modified',
+            (id, object) => {
+                RED.log.debug('LightColorTemperatureNode(light-state-modified): object = ' + JSON.stringify(object));
 
-            if (object.hasOwnProperty('on')) {
-                changedState.on = object.on;
+                var changedState = {};
+
+                if (Object.prototype.hasOwnProperty.call(object, 'on')) {
+                    changedState.on = object.on;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
+                    changedState.transitiontime = object.transitiontime;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
+                    changedState.bri = object.bri;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'ct')) {
+                    changedState.ct = object.ct;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
+                    changedState.colormode = object.colormode;
+                }
+                if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
+                    changedState.effect = object.effect;
+                }
+
+                this.status({fill: 'green', shape: 'dot', text: 'Light state changed'});
+                setTimeout(() => node.status({}), 3000);
+
+                outputState(node, node.light.state, changedState);
+
+                // Update our copy.
+                this.light = node.clientConn.bridge.dsGetLight(this.lightid);
             }
-            if (object.hasOwnProperty('transitiontime')) {
-                changedState.transitiontime = object.transitiontime;
-            }
-            if (object.hasOwnProperty('bri')) {
-                changedState.bri = object.bri;
-            }
-            if (object.hasOwnProperty('ct')) {
-                changedState.ct = object.ct;
-            }
-            if (object.hasOwnProperty('colormode')) {
-                changedState.colormode = object.colormode;
-            }
-            if (object.hasOwnProperty('effect')) {
-                changedState.effect = object.effect;
-            }
+        );
 
-            this.status({fill:'green', shape:'dot', text:'Light state changed'});
-            setTimeout(function () { node.status({}); }, 3000);
+        /**
+         * Light modified.
+         */
+        this.on(
+            'light-modified',
+            (id, object) => {
+                RED.log.debug('LightColorTemperatureNode(light-modified): object = ' + JSON.stringify(object));
 
-            outputState(node, node.light.state, changedState);
-            
-            // update our copy
-            this.light = node.clientConn.bridge.dsGetLight(this.lightid);
-        });
-        //
-        // light modified
-        //
-        this.on('light-modified', function(id, object) {
-            RED.log.debug('LightColorTemperatureNode(light-modified): object = ' + JSON.stringify(object));
+                this.status({fill: 'green', shape: 'dot', text: 'Light config modified'});
+                setTimeout(() => node.status({}), 3000);
+            }
+        );
 
-            this.status({fill:'green', shape:'dot', text:'Light config modified'});
-            setTimeout(function () { node.status({}); }, 3000);
-        });
-        //
-        // respond to inputs from NodeRED
-        //
-        this.on('input', function (msg) {
-            RED.log.debug('LightColorTemperatureNode(input)');
+        /*
+         * Respond to inputs from NodeRED
+         */
+        this.on(
+            'input',
+            (msg) => {
+                RED.log.debug('LightColorTemperatureNode(input)');
 
-            if (msg.topic === 'success') {
-                // this is a message that comes back from the actual device - don't send it, just update the state
-                // ....
-            } else if (msg.topic.toUpperCase() === 'SETSTATE') {
-                var object = {};
+                if (msg.topic === 'success') {
+                    // this is a message that comes back from the actual device - don't send it, just update the state
+                    // ....
+                } else if (msg.topic.toUpperCase() === 'SETSTATE') {
+                    var object = {};
 
-                if (typeof msg.payload === 'object') {
-                    object = msg.payload;
+                    if (typeof msg.payload === 'object') {
+                        object = msg.payload;
+                    } else {
+                        RED.log.debug('LightColorTemperatureNode(input): typeof payload = ' + typeof msg.payload);
+                        return;
+                    }
+
+                    if (Object.prototype.hasOwnProperty.call(object, 'on')) {
+                        node.light.state.on = object.on;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
+                        node.light.state.transitiontime = object.transitiontime;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
+                        node.light.state.bri = object.bri;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'ct')) {
+                        node.light.state.ct = object.ct;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
+                        node.light.state.colormode = object.colormode;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
+                        node.light.state.effect = object.effect;
+                    }
+
+                    node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+
+                    process.nextTick(() => node.emit('light-state-modified', node.lightid, node.light.state));
+                }
+            }
+        );
+
+        /**
+         * Close node.
+         */
+        this.on(
+            'close',
+            (removed, done) => {
+                if (removed) {
+                    // this node has been deleted
+                    node.clientConn.remove(node, 'light');
                 } else {
-                    RED.log.debug('LightColorTemperatureNode(input): typeof payload = ' + typeof msg.payload);
-                    return;
+                    // this node is being restarted
+                    node.clientConn.deregister(node, 'light');
                 }
 
-                if (object.hasOwnProperty('on')) {
-                    node.light.state.on = object.on;
-                }
-                if (object.hasOwnProperty('transitiontime')) {
-                    node.light.state.transitiontime = object.transitiontime;
-                }
-                if (object.hasOwnProperty('bri')) {
-                    node.light.state.bri = object.bri;
-                }
-                if (object.hasOwnProperty('ct')) {
-                    node.light.state.ct = object.ct;
-                }
-                if (object.hasOwnProperty('colormode')) {
-                    node.light.state.colormode = object.colormode;
-                }
-                if (object.hasOwnProperty('effect')) {
-                    node.light.state.effect = object.effect;
-                }
-
-                node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
-
-                process.nextTick(() => {
-                    node.emit('light-state-modified', node.lightid, node.light.state);
-                });                
+                done();
             }
-        });
-
-        this.on('close', function(removed, done) {
-            if (removed) {
-                // this node has been deleted
-                node.clientConn.remove(node, 'light');
-            } else {
-                // this node is being restarted
-                node.clientConn.deregister(node, 'light');
-            }
-            
-            done();
-        });
+        );
     }
 
     RED.nodes.registerType('huebridge-light-colortemp', LightColorTemperatureNode);
 
-    //
-    //
-    //
-    var outputState = function(node, fullState, changedState) {
+    /**
+     *
+     * @param node
+     * @param fullState
+     * @param changedState
+     */
+    var outputState = function (node, fullState, changedState) {
         var payload1 = {
-            topic:      'fullstate',
-            payload:    fullState
+            topic: 'fullstate',
+            payload: fullState
         };
 
         var payload2 = {
-            topic:      'write',
-            payload:    changedState
+            topic: 'write',
+            payload: changedState
         };
 
         RED.log.debug('LightNode::outputState(): payload1 = ' + JSON.stringify(payload1));
@@ -891,9 +996,7 @@ module.exports = function(RED) {
 
         node.send(payload2, payload1);
     };
-    //
-    //
-    //
+
     /*function hue_rgb_to_xy(rgb) {
         // Default to white
         float red   = 1.0f;

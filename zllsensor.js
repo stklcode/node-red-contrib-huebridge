@@ -16,31 +16,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-module.exports = function(RED) {
+module.exports = function (RED) {
     'use strict';
 
-    /******************************************************************************************************************
-	 * 
-	 *
-	 */
+    /**
+     * ZLL Temperature Sensor Node.
+     *
+     * @param config Node configuration.
+     * @constructor
+     */
     function ZLLTemperatureNode(config) {
         RED.nodes.createNode(this, config);
 
-        this.client     = config.client;
+        this.client = config.client;
         this.clientConn = RED.nodes.getNode(this.client);
 
         if (!this.clientConn) {
             this.error(RED._('zllsensor.errors.missing-config'));
-            this.status({fill:'red', shape:'dot', text:'Missing config'});
+            this.status({fill: 'red', shape: 'dot', text: 'Missing config'});
             return;
         } else if (typeof this.clientConn.register !== 'function') {
             this.error(RED._('zllsensor.errors.missing-bridge'));
-            this.status({fill:'red', shape:'dot', text:'Missing bridge'});
-            return;            
+            this.status({fill: 'red', shape: 'dot', text: 'Missing bridge'});
+            return;
         }
 
-        var node = this;
-        
+        const node = this;
+
         /*var fakeClient1 = {
             id: this.id + '.1'
         };
@@ -58,7 +60,7 @@ module.exports = function(RED) {
         this.temperatureid = this.clientConn.register(fakeClient2, 'zll', 'Temperature sensor', 'ZLLTemperature');
         this.presenceid    = this.clientConn.register(fakeClient3, 'zll', 'Light level sensor', 'ZLLLightlevel');*/
         //this.presenceid    = this.clientConn.register(this, 'zll', 'Motion sensor', 'ZLLPresence');
-        
+
         //this.sensorid = this.clientConn.register(this, 'zll', config.name, 'CLIPTemperature');
 
         //this.switch = node.clientConn.bridge.dsCreateSensor('ZGPSwitch', 'xx0', 'Switch');
@@ -120,97 +122,102 @@ module.exports = function(RED) {
 
         RED.log.debug('ZLLTemperatureNode(): rules = ' + JSON.stringify(node.clientConn.bridge.dsRules.list));*/
 
-        this.status({fill:'green', shape:'dot', text:'Ready'});
+        this.status({fill: 'green', shape: 'dot', text: 'Ready'});
 
-        /******************************************************************************************************************
-         * respond to inputs from NodeRED
-         *
+        /*
+         * Respond to inputs from NodeRED
          */
-        this.on('input', function (msg) {
-            RED.log.debug('ZLLTemperatureNode(input): msg = ' + JSON.stringify(msg));
-            RED.log.debug('ZLLTemperatureNode(input): typeof payload = ' + typeof msg.payload);
+        this.on(
+            'input',
+            (msg) => {
+                RED.log.debug('ZLLTemperatureNode(input): msg = ' + JSON.stringify(msg));
+                RED.log.debug('ZLLTemperatureNode(input): typeof payload = ' + typeof msg.payload);
 
-            var temp = 0;
-
-            if (typeof msg.payload === 'number') {
-                temp = Math.round(msg.payload * 100);
-            }
-
-            var obj = node.clientConn.bridge.dsGetSensor(node.temperatureid);
-            RED.log.debug('ZLLTemperatureNode(input): obj = ' + JSON.stringify(obj));
-
-            obj.state.temperature = temp;
-            RED.log.debug('ZLLTemperatureNode(input): obj = ' + JSON.stringify(obj));
-            node.clientConn.bridge.dsUpdateSensorState(node.temperatureid, obj.state);
-
-            /*if (msg.topic.toLowerCase() === 'clearconfig') {
-                if (typeof msg.payload === 'boolean' && msg.payload === true) {
-                    this.status({fill:'green', shape:'dot', text:'Clear config'});
-                    setTimeout(function () { node.status({}) }, 5000);
-
-                    node.clientConn.emit('manage', 'clearconfig');
-                } else {
-                    this.status({fill:'yellow', shape:'dot', text:'Payload must be bool 'true''});
-                    setTimeout(function () { node.status({}) }, 5000);
-                }
-            } else if (msg.topic.toLowerCase() === 'getconfig') {
-                this.status({fill:'green', shape:'dot', text:'Get config'});
-                setTimeout(function () { node.status({}) }, 5000);
-
-                var c = node.clientConn.bridge.dsGetEverything();
-
-                var msg = {
-                    topic: 'fullconfig',
-                    payload: c
-                };
-    
-                node.send(msg);
-            } else if (msg.topic.toLowerCase() === 'setconfig') {
-                if (node.clientConn.bridge.dsSetEverything(JSON.parse(msg.payload)) === false) {
-                    this.status({fill:'red', shape:'dot', text:'Failed to set config'});
-                } else {
-                    this.status({fill:'green', shape:'dot', text:'Set config success'});
-                    setTimeout(function () { node.status({}) }, 5000);
-                }
-            } else if (msg.topic.toLowerCase() === 'getlightids') {
-                this.status({fill:'green', shape:'dot', text:'Get light IDs'});
-                setTimeout(function () { node.status({}) }, 5000);
-
-                var obj = node.clientConn.bridge.dsGetAllLightNodes();
-
-                var msg = {
-                    topic: 'lightids',
-                    payload: obj
-                };
-    
-                node.send(msg);
-            } else if (msg.topic.toLowerCase() === 'deletelight') {
-                var lightid = msg.payload;
+                let temp = 0;
 
                 if (typeof msg.payload === 'number') {
-                    lightid = msg.payload.toString();
+                    temp = Math.round(msg.payload * 100);
                 }
 
-                if (node.clientConn.bridge.dsDeleteLight(lightid) === false) {
-                    this.status({fill:'red', shape:'dot', text:'Failed to delete light'});
-                } else {
-                    this.status({fill:'green', shape:'dot', text:'Light deleted'});
+                let obj = node.clientConn.bridge.dsGetSensor(node.temperatureid);
+                RED.log.debug('ZLLTemperatureNode(input): obj = ' + JSON.stringify(obj));
+
+                obj.state.temperature = temp;
+                RED.log.debug('ZLLTemperatureNode(input): obj = ' + JSON.stringify(obj));
+                node.clientConn.bridge.dsUpdateSensorState(node.temperatureid, obj.state);
+
+                /*if (msg.topic.toLowerCase() === 'clearconfig') {
+                    if (typeof msg.payload === 'boolean' && msg.payload === true) {
+                        this.status({fill:'green', shape:'dot', text:'Clear config'});
+                        setTimeout(function () { node.status({}) }, 5000);
+
+                        node.clientConn.emit('manage', 'clearconfig');
+                    } else {
+                        this.status({fill:'yellow', shape:'dot', text:'Payload must be bool 'true''});
+                        setTimeout(function () { node.status({}) }, 5000);
+                    }
+                } else if (msg.topic.toLowerCase() === 'getconfig') {
+                    this.status({fill:'green', shape:'dot', text:'Get config'});
                     setTimeout(function () { node.status({}) }, 5000);
-                }
-            }*/
-        });
 
-        this.on('close', function(removed, done) {
-            if (removed) {
-                // this node has been deleted
-                node.clientConn.remove(node, 'zll');
-            } else {
-                // this node is being restarted
-                node.clientConn.deregister(node, 'manage');
+                    var c = node.clientConn.bridge.dsGetEverything();
+
+                    var msg = {
+                        topic: 'fullconfig',
+                        payload: c
+                    };
+
+                    node.send(msg);
+                } else if (msg.topic.toLowerCase() === 'setconfig') {
+                    if (node.clientConn.bridge.dsSetEverything(JSON.parse(msg.payload)) === false) {
+                        this.status({fill:'red', shape:'dot', text:'Failed to set config'});
+                    } else {
+                        this.status({fill:'green', shape:'dot', text:'Set config success'});
+                        setTimeout(function () { node.status({}) }, 5000);
+                    }
+                } else if (msg.topic.toLowerCase() === 'getlightids') {
+                    this.status({fill:'green', shape:'dot', text:'Get light IDs'});
+                    setTimeout(function () { node.status({}) }, 5000);
+
+                    var obj = node.clientConn.bridge.dsGetAllLightNodes();
+
+                    var msg = {
+                        topic: 'lightids',
+                        payload: obj
+                    };
+
+                    node.send(msg);
+                } else if (msg.topic.toLowerCase() === 'deletelight') {
+                    var lightid = msg.payload;
+
+                    if (typeof msg.payload === 'number') {
+                        lightid = msg.payload.toString();
+                    }
+
+                    if (node.clientConn.bridge.dsDeleteLight(lightid) === false) {
+                        this.status({fill:'red', shape:'dot', text:'Failed to delete light'});
+                    } else {
+                        this.status({fill:'green', shape:'dot', text:'Light deleted'});
+                        setTimeout(function () { node.status({}) }, 5000);
+                    }
+                }*/
             }
-            
-            done();
-        });
+        );
+
+        this.on(
+            'close',
+            (removed, done) => {
+                if (removed) {
+                    // This node has been deleted.
+                    node.clientConn.remove(node, 'zll');
+                } else {
+                    // This node is being restarted.
+                    node.clientConn.deregister(node, 'manage');
+                }
+
+                done();
+            }
+        );
     }
 
     RED.nodes.registerType('huebridge-zlltemperature', ZLLTemperatureNode);

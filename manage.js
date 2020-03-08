@@ -16,115 +16,138 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-module.exports = function(RED) {
+module.exports = function (RED) {
     'use strict';
 
-    /******************************************************************************************************************
-	 * 
-	 *
-	 */
+    /**
+     * Management Node.
+     *
+     * @param config Node configuration.
+     * @constructor
+     */
     function ManageNode(config) {
         RED.nodes.createNode(this, config);
 
-        this.client     = config.client;
+        this.client = config.client;
         this.clientConn = RED.nodes.getNode(this.client);
 
         if (!this.clientConn) {
             this.error(RED._('manage.errors.missing-config'));
-            this.status({fill:'red', shape:'dot', text:'Missing config'});
+            this.status({fill: 'red', shape: 'dot', text: 'Missing config'});
             return;
         } else if (typeof this.clientConn.register !== 'function') {
             this.error(RED._('manage.errors.missing-bridge'));
-            this.status({fill:'red', shape:'dot', text:'Missing bridge'});
-            return;            
+            this.status({fill: 'red', shape: 'dot', text: 'Missing bridge'});
+            return;
         }
-        
+
         this.clientConn.register(this, 'manage', config);
-        this.status({fill:'green', shape:'dot', text:'Ready'});
+        this.status({fill: 'green', shape: 'dot', text: 'Ready'});
 
         var node = this;
 
-        //
-        //
-        //
-        this.on('hue-remove', function() {
-            RED.log.debug('ManageNode(hue-remove)');
-        });
-        /******************************************************************************************************************
-         * respond to inputs from NodeRED
-         *
+        this.on('hue-remove', () => RED.log.debug('ManageNode(hue-remove)'));
+
+        /*
+         * Respond to inputs from NodeRED.
          */
-        this.on('input', function (msg) {
-            RED.log.debug('ManageNode(input): msg = ' + JSON.stringify(msg));
+        this.on(
+            'input',
+            (msg) => {
+                RED.log.debug('ManageNode(input): msg = ' + JSON.stringify(msg));
 
-            if (msg.topic.toLowerCase() === 'clearconfig') {
-                if (typeof msg.payload === 'boolean' && msg.payload === true) {
-                    this.status({fill:'green', shape:'dot', text:'Clear config'});
-                    setTimeout(function () { node.status({}); }, 5000);
+                switch (msg.topic.toLowerCase()) {
+                    case 'clearconfig':
+                        if (typeof msg.payload === 'boolean' && msg.payload === true) {
+                            this.status({fill: 'green', shape: 'dot', text: 'Clear config'});
+                            setTimeout(function () {
+                                node.status({});
+                            }, 5000);
 
-                    node.clientConn.emit('manage', 'clearconfig');
-                } else {
-                    this.status({fill:'yellow', shape:'dot', text:'Payload must be bool "true"'});
-                    setTimeout(function () { node.status({}); }, 5000);
-                }
-            } else if (msg.topic.toLowerCase() === 'getconfig') {
-                this.status({fill:'green', shape:'dot', text:'Get config'});
-                setTimeout(function () { node.status({}); }, 5000);
+                            node.clientConn.emit('manage', 'clearconfig');
+                        } else {
+                            this.status({fill: 'yellow', shape: 'dot', text: 'Payload must be bool "true"'});
+                            setTimeout(function () {
+                                node.status({});
+                            }, 5000);
+                        }
+                        break;
 
-                var c = node.clientConn.bridge.dsGetEverything();
+                    case 'getconfig':
+                        this.status({fill: 'green', shape: 'dot', text: 'Get config'});
+                        setTimeout(function () {
+                            node.status({});
+                        }, 5000);
 
-                var msg = {
-                    topic: 'fullconfig',
-                    payload: c
-                };
-    
-                node.send(msg);
-            } else if (msg.topic.toLowerCase() === 'setconfig') {
-                if (node.clientConn.bridge.dsSetEverything(JSON.parse(msg.payload)) === false) {
-                    this.status({fill:'red', shape:'dot', text:'Failed to set config'});
-                } else {
-                    this.status({fill:'green', shape:'dot', text:'Set config success'});
-                    setTimeout(function () { node.status({}); }, 5000);
-                }
-            } else if (msg.topic.toLowerCase() === 'getlightids') {
-                this.status({fill:'green', shape:'dot', text:'Get light IDs'});
-                setTimeout(function () { node.status({}); }, 5000);
+                        node.send(
+                            {
+                                topic: 'fullconfig',
+                                payload: node.clientConn.bridge.dsGetEverything()
+                            }
+                        );
+                        break;
 
-                var obj = node.clientConn.bridge.dsGetAllLightNodes();
+                    case 'setconfig':
+                        if (node.clientConn.bridge.dsSetEverything(JSON.parse(msg.payload)) === false) {
+                            this.status({fill: 'red', shape: 'dot', text: 'Failed to set config'});
+                        } else {
+                            this.status({fill: 'green', shape: 'dot', text: 'Set config success'});
+                            setTimeout(function () {
+                                node.status({});
+                            }, 5000);
+                        }
+                        break;
 
-                var msg = {
-                    topic: 'lightids',
-                    payload: obj
-                };
-    
-                node.send(msg);
-            } else if (msg.topic.toLowerCase() === 'deletelight') {
-                var lightid = msg.payload;
+                    case 'getlightids':
+                        this.status({fill: 'green', shape: 'dot', text: 'Get light IDs'});
+                        setTimeout(function () {
+                            node.status({});
+                        }, 5000);
 
-                if (typeof msg.payload === 'number') {
-                    lightid = msg.payload.toString();
-                }
+                        node.send(
+                            {
+                                topic: 'lightids',
+                                payload: node.clientConn.bridge.dsGetAllLightNodes()
+                            }
+                        );
+                        break;
 
-                if (node.clientConn.bridge.dsDeleteLight(lightid) === false) {
-                    this.status({fill:'red', shape:'dot', text:'Failed to delete light'});
-                } else {
-                    this.status({fill:'green', shape:'dot', text:'Light deleted'});
-                    setTimeout(function () { node.status({}); }, 5000);
+                    case 'deletelight':
+                        var lightid = msg.payload;
+
+                        if (typeof msg.payload === 'number') {
+                            lightid = msg.payload.toString();
+                        }
+
+                        if (node.clientConn.bridge.dsDeleteLight(lightid) === false) {
+                            this.status({fill: 'red', shape: 'dot', text: 'Failed to delete light'});
+                        } else {
+                            this.status({fill: 'green', shape: 'dot', text: 'Light deleted'});
+                            setTimeout(function () {
+                                node.status({});
+                            }, 5000);
+                        }
+                        break;
+                    default:
+                    // Ignore unknown topic.
                 }
             }
-        });
+        );
 
-        this.on('close', function(removed, done) {
-            if (removed) {
-                // this node has been deleted
-                node.clientConn.remove(node, 'manage');
-            } else {
-                // this node is being restarted
-                node.clientConn.deregister(node, 'manage');
+        this.on(
+            'close',
+            (removed, done) => {
+                if (removed) {
+                    // this node has been deleted
+                    node.clientConn.remove(node, 'manage');
+                } else {
+                    // this node is being restarted
+                    node.clientConn.deregister(node, 'manage');
+                }
+
+                done();
             }
-            
-            done();
-        });
+        );
     }
 
     RED.nodes.registerType('huebridge-manage', ManageNode);

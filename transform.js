@@ -16,139 +16,153 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-module.exports = function(RED) {
+module.exports = function (RED) {
     'use strict';
 
-    /******************************************************************************************************************
-	 * 
-	 *
-	 */
+    /**
+     * Transform Node.
+     *
+     * @param config Node configuration.
+     * @constructor
+     */
     function TransformNode(config) {
         RED.nodes.createNode(this, config);
 
-        this.typ            = parseInt(config.typ);
-        this.timer          = null;
+        this.typ = parseInt(config.typ);
+        this.timer = null;
         this.transitiontime = 0;
-        this.bri_step       = 0;
-        this.onoff          = false;
-        this.bri            = 0;
-        this.ct             = null;
-        this.xy             = null;
-        this.hue            = null;
-        this.sat            = null;
+        this.bri_step = 0;
+        this.onoff = false;
+        this.bri = 0;
+        this.ct = null;
+        this.xy = null;
+        this.hue = null;
+        this.sat = null;
 
         var node = this;
 
-        //
-        // respond to inputs from NodeRED
-        //
-        this.on('input', function (msg) {
-            RED.log.debug('TransformNode(input): payload = ' + JSON.stringify(msg.payload));
+        /*
+         * Respond to inputs from NodeRED
+         */
+        this.on(
+            'input',
+            (msg) => {
+                RED.log.debug('TransformNode(input): payload = ' + JSON.stringify(msg.payload));
 
-            var object = msg.payload;
-            
-            if (object.hasOwnProperty('on')) {
-                node.onoff = object.on;
+                const object = msg.payload;
 
-                if (!object.on) {
-                    if (node.timer !== null) {
-                        clearInterval(node.timer);
-                        node.timer = null;
-                    }
+                if (Object.prototype.hasOwnProperty.call(object, 'on')) {
+                    node.onoff = object.on;
 
-                    msg.payload = {r: 0, g: 0, b: 0};
+                    if (!object.on) {
+                        if (node.timer !== null) {
+                            clearInterval(node.timer);
+                            node.timer = null;
+                        }
 
-                    node.send(msg);
-                }
-            }
+                        msg.payload = {r: 0, g: 0, b: 0};
 
-            if (object.hasOwnProperty('colormode')) {
-                if (object.colormode === 'xy' && object.hasOwnProperty('xy')) {
-                    RED.log.debug('TransformNode(input): colormode "xy"');
-                    node.xy  = object.xy;
-                    node.ct  = null;
-                    node.hue = null;
-                    node.sat = null;
-                } else if (object.colormode === 'ct' && object.hasOwnProperty('ct')) {
-                    RED.log.debug('TransformNode(input): colormode "ct"');
-                    node.xy  = null;
-                    node.ct  = object.ct;
-                    node.hue = null;
-                    node.sat = null;
-                } else if (object.colormode === 'hs') {
-                    RED.log.debug('TransformNode(input): colormode "hs"');
-                    node.xy  = null;
-                    node.ct  = null;
-
-                    if (object.hasOwnProperty('hue')) {
-                        RED.log.debug('TransformNode(input): got hue');
-                        node.hue = object.hue;
-                    }
-                    if (object.hasOwnProperty('sat')) {
-                        RED.log.debug('TransformNode(input): got sat');
-                        node.sat = object.sat;
+                        node.send(msg);
                     }
                 }
-            }
 
-            if (object.hasOwnProperty('transitiontime') && node.onoff === true && object.transitiontime > 0) {
-                RED.log.debug('TransformNode(input): transitiontime = ' + object.transitiontime);
+                if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
+                    if (object.colormode === 'xy' && Object.prototype.hasOwnProperty.call(object, 'xy')) {
+                        RED.log.debug('TransformNode(input): colormode "xy"');
+                        node.xy = object.xy;
+                        node.ct = null;
+                        node.hue = null;
+                        node.sat = null;
+                    } else if (object.colormode === 'ct' && Object.prototype.hasOwnProperty.call(object, 'ct')) {
+                        RED.log.debug('TransformNode(input): colormode "ct"');
+                        node.xy = null;
+                        node.ct = object.ct;
+                        node.hue = null;
+                        node.sat = null;
+                    } else if (object.colormode === 'hs') {
+                        RED.log.debug('TransformNode(input): colormode "hs"');
+                        node.xy = null;
+                        node.ct = null;
 
-                var target_bri = object.bri * 0.0039370078740157;  // scale from [0 - 254] to [0.0 - 1.0]
-                var bri_steps  = (target_bri - node.bri) / object.transitiontime;
-
-                RED.log.debug('TransformNode(input): target_bri = ' + target_bri);
-                RED.log.debug('TransformNode(input): bri_steps  = ' + bri_steps);
-
-                node.timer = setInterval(function(node, topic, target_bri, bri_steps) {
-                    node.bri += bri_steps;
-
-                    //RED.log.debug('TransformNode(transition): node.bri = ' + node.bri);
-
-                    if (node.bri >= target_bri) {
-                        // transition completed
-                        clearInterval(node.timer);
-
-                        node.timer = null;
-                        node.bri   = target_bri > 1.0 ? 1.0 : target_bri;
-
-                        RED.log.debug('TransformNode(transition): transition completed');
+                        if (Object.prototype.hasOwnProperty.call(object, 'hue')) {
+                            RED.log.debug('TransformNode(input): got hue');
+                            node.hue = object.hue;
+                        }
+                        if (Object.prototype.hasOwnProperty.call(object, 'sat')) {
+                            RED.log.debug('TransformNode(input): got sat');
+                            node.sat = object.sat;
+                        }
                     }
-                    
-                    node.sendValues(node, topic);
-                }, 100, node, msg.topic, target_bri, bri_steps);
+                }
 
-                return;
+                if (Object.prototype.hasOwnProperty.call(object, 'transitiontime') && node.onoff === true && object.transitiontime > 0) {
+                    RED.log.debug('TransformNode(input): transitiontime = ' + object.transitiontime);
+
+                    var target_bri = object.bri * 0.0039370078740157;  // scale from [0 - 254] to [0.0 - 1.0]
+                    var bri_steps = (target_bri - node.bri) / object.transitiontime;
+
+                    RED.log.debug('TransformNode(input): target_bri = ' + target_bri);
+                    RED.log.debug('TransformNode(input): bri_steps  = ' + bri_steps);
+
+                    node.timer = setInterval(
+                        () => {
+                            node.bri += bri_steps;
+
+                            //RED.log.debug('TransformNode(transition): node.bri = ' + node.bri);
+
+                            if (node.bri >= target_bri) {
+                                // transition completed
+                                clearInterval(node.timer);
+
+                                node.timer = null;
+                                node.bri = target_bri > 1.0 ? 1.0 : target_bri;
+
+                                RED.log.debug('TransformNode(transition): transition completed');
+                            }
+
+                            node.sendValues(node, msg.topic);
+                        },
+                        100
+                    );
+
+                    return;
+                }
+
+                if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
+                    node.bri = object.bri * 0.0039370078740157;  // scale from [0 - 254] to [0.0 - 1.0]
+                }
+
+                if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
+                    //changedState.effect = object.effect;
+                }
+
+                if (node.onoff === false) {
+                    return;
+                }
+
+                node.sendValues(node, msg.topic);
             }
+        );
 
-            if (object.hasOwnProperty('bri')) {
-                node.bri = object.bri * 0.0039370078740157;  // scale from [0 - 254] to [0.0 - 1.0]
+        this.on(
+            'close',
+            (removed, done) => {
+                if (removed) {
+                    // this node has been deleted
+                } else {
+                    // this node is being restarted
+                }
+
+                done();
             }
+        );
 
-            if (object.hasOwnProperty('effect')) {
-                //changedState.effect = object.effect;
-            }
-
-            if (node.onoff === false) {
-                return;
-            }
-
-            node.sendValues(node, msg.topic);
-        });
-
-        this.on('close', function(removed, done) {
-            if (removed) {
-                // this node has been deleted
-            } else {
-                // this node is being restarted
-            }
-            
-            done();
-        });
-        //
-        //
-        //
-        this.sendValues = function(node, topic) {
+        /**
+         *
+         * @param node
+         * @param topic
+         */
+        this.sendValues = function (node, topic) {
             var rgb = {
                 r: 0.0,
                 g: 0.0,
@@ -171,7 +185,7 @@ module.exports = function(RED) {
                 rgb.r = rgb.r * node.bri;
                 rgb.g = rgb.g * node.bri;
                 rgb.b = rgb.b * node.bri;
-            } else if(node.hue !== null & node.sat !== null) {
+            } else if (node.hue !== null & node.sat !== null) {
                 RED.log.debug('TransformNode(sendValues): method hs');
                 rgb = node.hsv2rgb(node.hue / 65535, node.sat / 254, node.bri);
             } else {
@@ -186,26 +200,32 @@ module.exports = function(RED) {
             }
 
             var msg = {
-                topic:   topic,
+                topic: topic,
                 payload: rgb
             };
 
-            node.send(msg);            
+            node.send(msg);
         };
-        //
-        // https://developers.meethue.com/documentation/color-conversions-rgb-xy
-        //
-        this.transformXYZSimple = function(x, y) {
+
+
+        /**
+         * @see https://developers.meethue.com/documentation/color-conversions-rgb-xy
+         *
+         * @param x
+         * @param y
+         * @return {{r: number, b: number, g: number}}
+         */
+        this.transformXYZSimple = function (x, y) {
             var z = 1.0 - x - y;
-        
+
             var Y = 1.0;
             var X = (Y / y) * x;
             var Z = (Y / y) * z;
 
             // sRGB D65 conversion
-            var r =  X * 1.656492 - Y * 0.354851 - Z * 0.255038;
+            var r = X * 1.656492 - Y * 0.354851 - Z * 0.255038;
             var g = -X * 0.707196 + Y * 1.655397 + Z * 0.036152;
-            var b =  X * 0.051713 - Y * 0.121364 + Z * 1.011530;
+            var b = X * 0.051713 - Y * 0.121364 + Z * 1.011530;
 
             if (r > b && r > g && r > 1.0) {
                 // red is too big
@@ -252,22 +272,27 @@ module.exports = function(RED) {
                 }
             }
 
-            return {r:r, g:g, b:b};
+            return {r: r, g: g, b: b};
         };
         //
-        this.ctToKelvin = function(ct) {
+        this.ctToKelvin = function (ct) {
             // Mirek = 1,000,000 / (color temperature in Kelvin).
             // (color temperature in Kelvin) = 1,000,000 / Mirek
             return 1000000 / ct;
         };
-        //
-        this.temperatureToRGB = function(ct) {
+
+        /**
+         *
+         * @param ct
+         * @return {{r: number, b: number, g: number}}
+         */
+        this.temperatureToRGB = function (ct) {
             //RED.log.debug('TemperatureToRGB(): ct = ' + ct);
 
             const XYZ_to_RGB = [
-                [  3.24071,	 -0.969258,   0.0556352 ],
-                [ -1.53726,	  1.87599,   -0.203996 ],
-                [ -0.498571,  0.0415557,  1.05707]
+                [3.24071, -0.969258, 0.0556352],
+                [-1.53726, 1.87599, -0.203996],
+                [-0.498571, 0.0415557, 1.05707]
             ];
 
             var T = this.ctToKelvin(ct);
@@ -287,15 +312,15 @@ module.exports = function(RED) {
             }
 
             yD = -3 * xD * xD + 2.87 * xD - 0.275;
-        
+
             // Fit for Blackbody using CIE standard observer function at 2 degrees
             //xD = -1.8596e9/(T*T*T) + 1.37686e6/(T*T) + 0.360496e3/T + 0.232632;
             //yD = -2.6046*xD*xD + 2.6106*xD - 0.239156;
-        
+
             // Fit for Blackbody using CIE standard observer function at 10 degrees
             //xD = -1.98883e9/(T*T*T) + 1.45155e6/(T*T) + 0.364774e3/T + 0.231136;
             //yD = -2.35563*xD*xD + 2.39688*xD - 0.196035;
-        
+
             X = xD / yD;
             Y = 1;
             Z = (1 - xD - yD) / yD;
@@ -313,29 +338,35 @@ module.exports = function(RED) {
             }
 
             return {
-                r: RGB[0], 
-                g: RGB[1], 
+                r: RGB[0],
+                g: RGB[1],
                 b: RGB[2]
             };
         };
-        //
-        // https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both
-        // Mar 24 '16 at 19:57, Geremia
-        //
-        this.hsv2rgb = function(h, s, v) {
+
+        /**
+         * https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both
+         * Mar 24 '16 at 19:57, Geremia
+         *
+         * @param h
+         * @param s
+         * @param v
+         * @return {{r: number, b: number, g: number}}
+         */
+        this.hsv2rgb = function (h, s, v) {
             var r, g, b;
-        
+
             h = h * 360;
 
             var P, Q, T, fract;
-        
+
             (h == 360.0) ? (h = 0.0) : (h /= 60.0);
             fract = h - Math.floor(h);
-        
-            P = v*(1. - s);
-            Q = v*(1. - s*fract);
-            T = v*(1. - s*(1. - fract));
-        
+
+            P = v * (1. - s);
+            Q = v * (1. - s * fract);
+            T = v * (1. - s * (1. - fract));
+
             if (0. <= h && h < 1.) {
                 r = v;
                 g = T;
@@ -372,6 +403,7 @@ module.exports = function(RED) {
                 b: b
             };
         };
+
         /**
          * Converts an HSL color value to RGB. Conversion formula
          * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
@@ -383,31 +415,31 @@ module.exports = function(RED) {
          * @param   {number}  l       The lightness
          * @return  {Object}          The RGB representation
          */
-        this.hslToRgb = function(h, s, l) {
+        this.hslToRgb = function (h, s, l) {
             RED.log.debug('TransformNode(hslToRgb): h = ' + h);
             RED.log.debug('TransformNode(hslToRgb): s = ' + s);
             RED.log.debug('TransformNode(hslToRgb): l = ' + l);
 
             var r, g, b;
 
-            if(s == 0) {
+            if (s == 0) {
                 r = g = b = l; // achromatic
             } else {
-                var hue2rgb = function hue2rgb(p, q, t) {
+                const hue2rgb = function (p, q, t) {
                     if (t < 0) t += 1;
                     if (t > 1) t -= 1;
-                    if (t < 1/6) return p + (q - p) * 6 * t;
-                    if (t < 1/2) return q;
-                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    if (t < 1 / 6) return p + (q - p) * 6 * t;
+                    if (t < 1 / 2) return q;
+                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
                     return p;
                 };
 
                 var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
                 var p = 2 * l - q;
 
-                r = hue2rgb(p, q, h + 1/3);
+                r = hue2rgb(p, q, h + 1 / 3);
                 g = hue2rgb(p, q, h);
-                b = hue2rgb(p, q, h - 1/3);
+                b = hue2rgb(p, q, h - 1 / 3);
             }
 
             RED.log.debug('TransformNode(hslToRgb): r = ' + r);
@@ -426,22 +458,35 @@ module.exports = function(RED) {
 
     RED.nodes.registerType('huebridge-transform', TransformNode);
 
-    //
-    var scaleHue = function(hue) {
-        // scale from 0 - 65535 => 0.0 - 360.0
-        var v = hue / 182.04166;
-        return v > 360.0 ? 360.0 : v; 
+    /**
+     * Scale hue value from 0-65535 to 0-360°.
+     *
+     * @param {number} hue Hue value (0-65535).
+     * @return {number} Hue value in degrees.
+     */
+    const scaleHue = function (hue) {
+        const v = hue / 182.04166;
+        return v > 360.0 ? 360.0 : v;
     };
-    //
-    var scaleSaturation = function(sat) {
-        // scale from 0 - 254 => 0.0 - 100.0
-        var v = sat / 2.54;
-        return v > 100 ? 100 : v; 
+
+    /**
+     * Scale saturation value from 0-254 to 0-100
+     * @param {number} sat Saturation value (0-254).
+     * @return {number} Saturation value (0-100).
+     */
+    const scaleSaturation = function (sat) {
+        const v = sat / 2.54;
+        return v > 100 ? 100 : v;
     };
-    //
-    var scaleBrightness = function(bri) {
-        // scale from 1 to 254 => 0 - 100%
-        var v = Math.round(bri / 2.54);
-        return v > 100 ? 100 : v; 
+
+    /**
+     * Scale brightness 1-254 to 0-100%.
+     *
+     * @param {number} bri Brightness value (1-254)
+     * @return {number} Brightness value in percent.
+     */
+    const scaleBrightness = function (bri) {
+        const v = Math.round(bri / 2.54);
+        return v > 100 ? 100 : v;
     };
 };
