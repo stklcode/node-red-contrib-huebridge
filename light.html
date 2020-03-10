@@ -40,7 +40,18 @@
 </script>
 
 <script type="text/x-red" data-help-name="huebridge-light-onoff">
-    Nothing here yet.
+    <h3>Inputs</h3>
+    Topic must be <code>setstate</code>.
+    <br>
+    Payload must be an object that contains one or more of these fields:
+
+    <dl class="message-properties">
+        <dt>on<span class="property-type">boolean</span></dt>
+        <dd>On/Off state, <em>true</em> or <em>false</em></dd>
+
+        <dt>transitiontime <span class="property-type">number</span></dt>
+        <dd>Duration of the transition to new state as multiple of <em>100ms</em></dd>
+    </dl>
 </script>
 
 <script type="text/javascript">
@@ -113,7 +124,21 @@
 </script>
 
 <script type="text/x-red" data-help-name="huebridge-light-dimmable">
-    Nothing here yet.
+    <h3>Inputs</h3>
+    Topic must be <code>setstate</code>.
+    <br>
+    Payload must be an object that contains one or more of these fields:
+
+    <dl class="message-properties">
+        <dt>on<span class="property-type">boolean</span></dt>
+        <dd>On/Off state, <em>true</em> or <em>false</em></dd>
+
+        <dt>transitiontime <span class="property-type">number</span></dt>
+        <dd>Duration of the transition to new state as multiple of <em>100ms</em></dd>
+
+        <dt>bri <span class="property-type">number</span></dt>
+        <dd>Brightness value between <em>0</em> and <em>254</em></dd>
+    </dl>
 </script>
 
 <script type="text/javascript">
@@ -190,7 +215,36 @@
 </script>
 
 <script type="text/x-red" data-help-name="huebridge-light-color">
-    Nothing here yet.
+    <h3>Inputs</h3>
+    Topic must be <code>setstate</code>.
+    <br>
+    Payload must be an object that contains one or more of these fields:
+
+    <dl class="message-properties">
+        <dt>on<span class="property-type">boolean</span></dt>
+        <dd>On/Off state, <em>true</em> or <em>false</em></dd>
+
+        <dt>transitiontime <span class="property-type">number</span></dt>
+        <dd>Duration of the transition to new state as multiple of <em>100ms</em></dd>
+
+        <dt>bri <span class="property-type">number</span></dt>
+        <dd>Brightness value between <em>0</em> and <em>254</em></dd>
+
+        <dt>hue <span class="property-type">number</span></dt>
+        <dd>Hue value between <em>0</em> and <em>65535</em></dd>
+
+        <dt>sat <span class="property-type">number</span></dt>
+        <dd>Saturation value between <em>0</em> (white) and <em>254</em> (colored)</dd>
+
+        <dt>xy <span class="property-type">number</span></dt>
+        <dd>X and Y coordinates of CIE color space, both between <em>0</em> and <em>1</em></dd>
+
+        <dt>colormode <span class="property-type">number</span></dt>
+        <dd>color mode indicator: <em>hs</em> (Hue and Saturation) or <em>xy</em> (XY)</dd>
+
+        <dt>effect <span class="property-type">number</span></dt>
+        <dd>Effect name, either <em>none</em> or <em>colorloop</em></dd>
+    </dl>
 </script>
 
 <script type="text/javascript">
@@ -271,17 +325,39 @@
 </script>
 
 <script type="text/x-red" data-help-name="huebridge-light-extcolor">
-    Topic must be <code>setstate</code>.<br>
-    Payload must be an object that contains one or more of these fields:<br>
-    <code>on</code><br>
-    <code>transitiontime</code><br>
-    <code>bri</code><br>
-    <code>hue</code><br>
-    <code>sat</code><br>
-    <code>ct</code><br>
-    <code>xy</code><br>
-    <code>colormode</code><br>
-    <code>effect</code><br>
+    <h3>Inputs</h3>
+    Topic must be <code>setstate</code>.
+    <br>
+    Payload must be an object that contains one or more of these fields:
+
+    <dl class="message-properties">
+        <dt>on<span class="property-type">boolean</span></dt>
+        <dd>On/Off state, <em>true</em> or <em>false</em></dd>
+
+        <dt>transitiontime <span class="property-type">number</span></dt>
+        <dd>Duration of the transition to new state as multiple of <em>100ms</em></dd>
+
+        <dt>bri <span class="property-type">number</span></dt>
+        <dd>Brightness value between <em>0</em> and <em>254</em></dd>
+
+        <dt>hue <span class="property-type">number</span></dt>
+        <dd>Hue value between <em>0</em> and <em>65535</em></dd>
+
+        <dt>sat <span class="property-type">number</span></dt>
+        <dd>Saturation value between <em>0</em> (white) and <em>254</em> (colored)</dd>
+
+        <dt>ct <span class="property-type">number</span></dt>
+        <dd>Mired color temperature betweek <em>153</em> (6500K) and <em>500</em> (2000K)</dd>
+
+        <dt>xy <span class="property-type">number</span></dt>
+        <dd>X and Y coordinates of CIE color space, both between <em>0</em> and <em>1</em></dd>
+
+        <dt>colormode <span class="property-type">number</span></dt>
+        <dd>color mode indicator: <em>hs</em> (Hue and Saturation), <em>xy</em> (XY) or <em>ct</em> (Color Temperature)</dd>
+
+        <dt>effect <span class="property-type">number</span></dt>
+        <dd>Effect name, either <em>none</em> or <em>colorloop</em></dd>
+    </dl>
 </script>
 
 <script type="text/javascript">
@@ -379,7 +455,30 @@
 </script>
 
 <script type="text/x-red" data-help-name="huebridge-light-colortemp">
-    Nothing here yet.
+    <h3>Inputs</h3>
+    Topic must be <code>setstate</code>.
+    <br>
+    Payload must be an object that contains one or more of these fields:
+
+    <dl class="message-properties">
+        <dt>on<span class="property-type">boolean</span></dt>
+        <dd>On/Off state, <em>true</em> or <em>false</em></dd>
+
+        <dt>transitiontime <span class="property-type">number</span></dt>
+        <dd>Duration of the transition to new state as multiple of <em>100ms</em></dd>
+
+        <dt>bri <span class="property-type">number</span></dt>
+        <dd>Brightness value between <em>0</em> and <em>254</em></dd>
+
+        <dt>ct <span class="property-type">number</span></dt>
+        <dd>Mired color temperature betweek <em>153</em> (6500K) and <em>500</em> (2000K)</dd>
+
+        <dt>colormode <span class="property-type">number</span></dt>
+        <dd>color mode indicator: <em>hs</em> (Hue and Saturation), <em>xy</em> (XY) or <em>ct</em> (Color Temperature)</dd>
+
+        <dt>effect <span class="property-type">number</span></dt>
+        <dd>Effect name, either <em>none</em> or <em>colorloop</em></dd>
+    </dl>
 </script>
 
 <script type="text/javascript">
