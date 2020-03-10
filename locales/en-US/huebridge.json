@@ -2,15 +2,22 @@
     "huebridge": {
         "label": {
             "name": "Name",
+            "network-configuration": "Network Configuration",
             "address": "Address",
             "netmask": "Netmask",
             "gateway": "Gateway",
             "port": "Port",
+            "external-paarameters": "Optional for Reverse Proxy compatibiltiy",
+            "extAddress": "Ext. Address",
+            "extPort": "Ext. Port",
             "timezone": "Timezone",
             "timeout": "Timeout"
         },
         "placeholder": {
             "name": "Name"
+        },
+        "hint": {
+            "external-paarameters": "If these fields are filled, this address will be reported on API requests instead of the actual values configured above."
         },
         "state": {
             "connected": "Connected to broker: __broker__",
