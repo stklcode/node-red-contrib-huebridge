@@ -43,6 +43,14 @@ module.exports = function (RED) {
 
         const node = this;
 
+        this.temperatureid = this.clientConn.register(this, 'zll', 'Temperature sensor', 'ZLLTemperature');
+
+        if (this.temperatureid === false) {
+            this.error(RED._('zllsensor.errors.create'));
+            this.status({fill: 'red', shape: 'dot', text: RED._('zllsensor.errors.create')});
+            return;
+        }
+
         /*var fakeClient1 = {
             id: this.id + '.1'
         };
@@ -57,7 +65,6 @@ module.exports = function (RED) {
         };
 
         this.presenceid    = this.clientConn.register(fakeClient1, 'zll', 'Motion sensor', 'ZLLPresence');
-        this.temperatureid = this.clientConn.register(fakeClient2, 'zll', 'Temperature sensor', 'ZLLTemperature');
         this.presenceid    = this.clientConn.register(fakeClient3, 'zll', 'Light level sensor', 'ZLLLightlevel');*/
         //this.presenceid    = this.clientConn.register(this, 'zll', 'Motion sensor', 'ZLLPresence');
 
