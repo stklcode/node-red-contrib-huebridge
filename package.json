@@ -1,12 +1,12 @@
 {
   "name": "node-red-contrib-huebridge",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Node-RED nodes to simulate Phillips Hue Bridge devices",
   "main": "huebridge.js",
   "scripts": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mikejac/node-red-contrib-huebridge.git"
+    "url": "git+https://github.com/stklcode/node-red-contrib-huebridge.git"
   },
   "keywords": [
     "hue",
@@ -23,13 +23,20 @@
     }
   },
   "author": {
-    "name": "Michael Jacobsen"
+    "name": "Stefan Kalscheuer",
+    "email": "stefan@stklcode.de"
   },
+  "contributors": [
+    {
+      "name": "Michael Jacobsen",
+      "email": "michael@visbyjacobsen.dk"
+    }
+  ],
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/mikejac/node-red-contrib-huebridge/issues"
+    "url": "https://github.com/stklcode/node-red-contrib-huebridge/issues"
   },
-  "homepage": "https://github.com/mikejac/node-red-contrib-huebridge#readme",
+  "homepage": "https://github.com/stklcode/node-red-contrib-huebridge#readme",
   "dependencies": {
     "ip": "^1.1.5",
     "node-persist": "^2.1.0",
@@ -40,8 +47,8 @@
   },
   "maintainers": [
     {
-      "name": "mikejac",
-      "email": "michael@visbyjacobsen.dk"
+      "name": "Stefan Kalscheuer",
+      "email": "stefan@stklcode.de"
     }
   ]
 }

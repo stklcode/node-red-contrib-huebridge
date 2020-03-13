@@ -4,16 +4,6 @@ A Philips Hue Bridge *emulator* to control any kind of lights (or other things f
 
 > This is a work in progress!
 
-## Linux: Run http server on port 80 as non-root user
-Ref.: [stackoverflow](https://stackoverflow.com/questions/16573668/best-practices-when-running-node-js-with-port-80-ubuntu-linode)
-
-    sudo apt install libcap2-bin
-    sudo setcap cap_net_bind_service=+ep `readlink -f \`which node\``
-
-**Note 1:** The Philips Hue app seems only to be able to connect to port 80.
-
-**Note 2:** The above `setcap` command does not survive a reboot.
-
 ## Installation
 To install - change to your Node-RED user directory.
 
@@ -23,31 +13,40 @@ To install - change to your Node-RED user directory.
 ## Nodes in this package
 
 ### On/Off Light
-...
+
+Supports switching light on and off.
 
 ### Dimmable Light
-...
+
+Supports switching on/off and adjusting brightness.
 
 ### Color Light
-...
+
+Supports RGB color with colormodes `hs` (Hue, Saturation) and `xy` (CIE 1931 Chromacity).
+
+### Color Temperature Light
+
+Support color temperature setting with colormode `ct`.
 
 ### Extended Color Light
 
-Support colormode 'hs' (hue, saturation), 'xy' (CIE 1931 Chromacity) and 'ct' (color temperature).
-
-### Color Temperature Light
-...
+Support both RGB and color temperature setting with colormodes `hs` (Hue, Saturation), `xy` (CIE 1931 Chromacity) and 
+`ct` (color temperature).
 
 ### Link Button
 Enables pairing.
 
-`topic` can be anything (i.e. the node does not use it).
-
-`payload` can be anything (i.e. the node does not use it).
-
+`topic` and `payload` can be arbitrary values (i.e. the node does not use it).
 
 ### Manage
-....
+
+Management node allows bridge configuration handling.
+
+Supported `topic` values:
+* `clearconfig` - Clear the bridge configuration if `payload` is `true`
+* `getconfig` - Get complete configuration (backup)
+* `setconfig` - Update the configuration with `payload` value (restore)
+* `getlightids` - Get information about all lights
 
 ### Sensors
 
@@ -58,13 +57,16 @@ Emulate a Hue Tap with it's four buttons.
 `payload` must be a number.
 Valid payload numbers: `1, 2, 3, 4`.
 
+##### ZLL Temperature
+Emulate a ZLL temperature sensor.
+
+`topic` can be anything (i.e. the node does not use it).
+`payload` must be a number representing the current value in degrees celsius (e.g. `17.50`, `21.25`).
+
 ##### ZLL Switch (Hue Wireless Dimmer Switch)
 Not implemented.
 
 ##### ZLL Presence (Hue Motion Sensor)
-Not implemented.
-
-##### ZLL Temperature
 Not implemented.
 
 ##### ZLL Lightlevel
@@ -93,13 +95,16 @@ Not implemented as a node.
 
 ## Notes
 
-1. The timezone can be set using the Hue App but these nodes will always use the timezone setup on the server running Node-RED.
+1. For interoperabilits with most devices the bridge must be exposed on port 80.
+   Either bind it directly to that port or adjust _external_ address and port values for reverse proxy setups.
 
-2. HomeKit interface is not implemented.
+2. The timezone can be set using the Hue App but these nodes will always use the timezone setup on the server running Node-RED.
 
-3. None of the remote access features will work.
+3. HomeKit interface is not implemented.
 
-4. The transfom node will handle transitions but it might not work very well. It does a transition calculation once every 100ms and that might simply be too much depending on your setup.
+4. None of the remote access features will work.
+
+5. The transfom node will handle transitions but it might not work very well. It does a transition calculation once every 100ms and that might simply be too much depending on your setup.
 
 ## Examples
 
@@ -145,6 +150,12 @@ topic = setstate
 payload (JSON) = {"on":true,"bri":254}
 ```
 
-## Copyright and license
+## Copyright and License
 
-Copyright 2018 Michael Jacobsen under [the GNU General Public License version 3](LICENSE).
+Copyright
+
+2020 Stefan Kalscheuer
+
+2018-2019 Michael Jacobsen
+
+Licensed under [GNU General Public License version 3](LICENSE).
