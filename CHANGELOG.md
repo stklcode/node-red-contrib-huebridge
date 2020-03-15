@@ -13,6 +13,7 @@
 
 ### Fixed
 * Warning generation function
+* Fix sensing response headers (Content-Type: JSON)
 
 ## 0.0.7 - 2019-02-13
 
