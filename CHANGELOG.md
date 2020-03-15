@@ -11,6 +11,7 @@
 * Update dependencies
 * Overhaul code style and ES6 utilization
 * Extend help texts for light nodes
+* Disable initial write for light nodes
 
 ### Fixed
 * Warning generation function

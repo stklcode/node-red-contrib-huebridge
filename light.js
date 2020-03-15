@@ -56,15 +56,6 @@ module.exports = function (RED) {
 
         this.status({fill: 'green', shape: 'dot', text: 'Ready'});
 
-        setTimeout(
-            () => {
-                RED.log.debug('LightOnOffNode(): initial write');
-
-                outputState(this, this.light.state, this.light.state);
-            },
-            100
-        );
-
         /**
          * Light state change.
          */
@@ -251,15 +242,6 @@ module.exports = function (RED) {
 
         this.status({fill: 'green', shape: 'dot', text: 'Ready'});
 
-        setTimeout(
-            () => {
-                RED.log.debug('LightDimmableNode(): initial write');
-
-                outputState(this, this.light.state, this.light.state);
-            },
-            100
-        );
-
         /**
          * Light state change.
          */
@@ -404,15 +386,6 @@ module.exports = function (RED) {
         RED.log.debug('LightColorNode(startup): light = ' + JSON.stringify(this.light));
 
         this.status({fill: 'green', shape: 'dot', text: 'Ready'});
-
-        setTimeout(
-            () => {
-                RED.log.debug('LightColorNode(): initial write');
-
-                outputState(this, this.light.state, this.light.state);
-            },
-            100
-        );
 
         /**
          * Light state change.
@@ -588,15 +561,6 @@ module.exports = function (RED) {
         RED.log.debug('LightExtendedColorNode(startup): light = ' + JSON.stringify(this.light));
 
         this.status({fill: 'green', shape: 'dot', text: 'Ready'});
-
-        setTimeout(
-            () => {
-                RED.log.debug('LightExtendedColorNode(): initial write');
-
-                outputState(this, this.light.state, this.light.state);
-            },
-            100
-        );
 
         /**
          * Light state change.
@@ -835,15 +799,6 @@ module.exports = function (RED) {
         RED.log.debug('LightColorTemperatureNode(startup): light = ' + JSON.stringify(this.light));
 
         this.status({fill: 'green', shape: 'dot', text: 'Ready'});
-
-        setTimeout(
-            () => {
-                RED.log.debug('LightColorTemperatureNode(): initial write');
-
-                outputState(this, this.light.state, this.light.state);
-            },
-            100
-        );
 
         /**
          * Light state change.
