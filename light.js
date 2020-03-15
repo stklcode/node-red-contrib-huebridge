@@ -50,10 +50,8 @@ module.exports = function (RED) {
             return;
         }
 
-        var node = this;
-
         // get a COPY of the light
-        this.light = node.clientConn.bridge.dsGetLight(this.lightid);
+        this.light = this.clientConn.bridge.dsGetLight(this.lightid);
         RED.log.debug('LightOnOffNode(startup): light = ' + JSON.stringify(this.light));
 
         this.status({fill: 'green', shape: 'dot', text: 'Ready'});
@@ -62,7 +60,7 @@ module.exports = function (RED) {
             () => {
                 RED.log.debug('LightOnOffNode(): initial write');
 
-                outputState(node, node.light.state, node.light.state);
+                outputState(this, this.light.state, this.light.state);
             },
             100
         );
@@ -94,12 +92,12 @@ module.exports = function (RED) {
                 }
 
                 this.status({fill: 'green', shape: 'dot', text: 'Light state changed'});
-                setTimeout(() => node.status({}), 3000);
+                setTimeout(() => this.status({}), 3000);
 
-                outputState(node, node.light.state, changedState);
+                outputState(this, this.light.state, changedState);
 
                 // Update our copy.
-                this.light = node.clientConn.bridge.dsGetLight(this.lightid);
+                this.light = this.clientConn.bridge.dsGetLight(this.lightid);
             }
         );
 
@@ -112,7 +110,7 @@ module.exports = function (RED) {
                 RED.log.debug('LightOnOffNode(light-modified): object = ' + JSON.stringify(object));
 
                 this.status({fill: 'green', shape: 'dot', text: 'Light config modified'});
-                setTimeout(() => node.status({}), 3000);
+                setTimeout(() => this.status({}), 3000);
             }
         );
 
@@ -135,25 +133,25 @@ module.exports = function (RED) {
                     }
 
                     if (Object.prototype.hasOwnProperty.call(object, 'on')) {
-                        node.light.state.on = object.on;
+                        this.light.state.on = object.on;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
-                        node.light.state.transitiontime = object.transitiontime;
+                        this.light.state.transitiontime = object.transitiontime;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
-                        node.light.state.bri = object.bri;
+                        this.light.state.bri = object.bri;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
-                        node.light.state.colormode = object.colormode;
+                        this.light.state.colormode = object.colormode;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
-                        node.light.state.effect = object.effect;
+                        this.light.state.effect = object.effect;
                     }
 
-                    node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+                    this.clientConn.bridge.dsUpdateLightState(this.lightid, this.light.state);
 
                     if (msg.topic.toUpperCase() === 'SETSTATE') {
-                        process.nextTick(() => node.emit('light-state-modified', node.lightid, node.light.state));
+                        process.nextTick(() => this.emit('light-state-modified', this.lightid, this.light.state));
                     }
                 }
 
@@ -171,25 +169,25 @@ module.exports = function (RED) {
                     }
 
                     if (Object.prototype.hasOwnProperty.call(object, 'on')) {
-                        node.light.state.on = object.on;
+                        this.light.state.on = object.on;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
-                        node.light.state.transitiontime = object.transitiontime;
+                        this.light.state.transitiontime = object.transitiontime;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
-                        node.light.state.bri = object.bri;
+                        this.light.state.bri = object.bri;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
-                        node.light.state.colormode = object.colormode;
+                        this.light.state.colormode = object.colormode;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
-                        node.light.state.effect = object.effect;
+                        this.light.state.effect = object.effect;
                     }
 
-                    node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+                    this.clientConn.bridge.dsUpdateLightState(this.lightid, this.light.state);
 
                     process.nextTick(() => {
-                        node.emit('light-state-modified', node.lightid, node.light.state);
+                        this.emit('light-state-modified', this.lightid, this.light.state);
                     });
                 }*/
             }
@@ -203,10 +201,10 @@ module.exports = function (RED) {
             (removed, done) => {
                 if (removed) {
                     // this node has been deleted
-                    node.clientConn.remove(node, 'light');
+                    this.clientConn.remove(this, 'light');
                 } else {
                     // this node is being restarted
-                    node.clientConn.deregister(node, 'light');
+                    this.clientConn.deregister(this, 'light');
                 }
 
                 done();
@@ -247,10 +245,8 @@ module.exports = function (RED) {
             return;
         }
 
-        var node = this;
-
         // get a COPY of the light
-        this.light = node.clientConn.bridge.dsGetLight(this.lightid);
+        this.light = this.clientConn.bridge.dsGetLight(this.lightid);
         RED.log.debug('LightDimmableNode(startup): light = ' + JSON.stringify(this.light));
 
         this.status({fill: 'green', shape: 'dot', text: 'Ready'});
@@ -259,7 +255,7 @@ module.exports = function (RED) {
             () => {
                 RED.log.debug('LightDimmableNode(): initial write');
 
-                outputState(node, node.light.state, node.light.state);
+                outputState(this, this.light.state, this.light.state);
             },
             100
         );
@@ -288,12 +284,12 @@ module.exports = function (RED) {
                 }
 
                 this.status({fill: 'green', shape: 'dot', text: 'Light state changed'});
-                setTimeout(() => node.status({}), 3000);
+                setTimeout(() => this.status({}), 3000);
 
-                outputState(node, node.light.state, changedState);
+                outputState(this, this.light.state, changedState);
 
                 // Update our copy.
-                this.light = node.clientConn.bridge.dsGetLight(this.lightid);
+                this.light = this.clientConn.bridge.dsGetLight(this.lightid);
             }
         );
 
@@ -306,7 +302,7 @@ module.exports = function (RED) {
                 RED.log.debug('LightDimmableNode(light-modified): object = ' + JSON.stringify(object));
 
                 this.status({fill: 'green', shape: 'dot', text: 'Light config modified'});
-                setTimeout(() => node.status({}), 3000);
+                setTimeout(() => this.status({}), 3000);
             }
         );
 
@@ -332,21 +328,21 @@ module.exports = function (RED) {
                     }
 
                     if (Object.prototype.hasOwnProperty.call(object, 'on')) {
-                        node.light.state.on = object.on;
+                        this.light.state.on = object.on;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
-                        node.light.state.transitiontime = object.transitiontime;
+                        this.light.state.transitiontime = object.transitiontime;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
-                        node.light.state.bri = object.bri;
+                        this.light.state.bri = object.bri;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
-                        node.light.state.effect = object.effect;
+                        this.light.state.effect = object.effect;
                     }
 
-                    node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+                    this.clientConn.bridge.dsUpdateLightState(this.lightid, this.light.state);
 
-                    process.nextTick(() => node.emit('light-state-modified', node.lightid, node.light.state));
+                    process.nextTick(() => this.emit('light-state-modified', this.lightid, this.light.state));
                 }
             }
         );
@@ -359,10 +355,10 @@ module.exports = function (RED) {
             (removed, done) => {
                 if (removed) {
                     // this node has been deleted
-                    node.clientConn.remove(node, 'light');
+                    this.clientConn.remove(this, 'light');
                 } else {
                     // this node is being restarted
-                    node.clientConn.deregister(node, 'light');
+                    this.clientConn.deregister(this, 'light');
                 }
 
                 done();
@@ -403,10 +399,8 @@ module.exports = function (RED) {
             return;
         }
 
-        var node = this;
-
         // get a COPY of the light
-        this.light = node.clientConn.bridge.dsGetLight(this.lightid);
+        this.light = this.clientConn.bridge.dsGetLight(this.lightid);
         RED.log.debug('LightColorNode(startup): light = ' + JSON.stringify(this.light));
 
         this.status({fill: 'green', shape: 'dot', text: 'Ready'});
@@ -415,7 +409,7 @@ module.exports = function (RED) {
             () => {
                 RED.log.debug('LightColorNode(): initial write');
 
-                outputState(node, node.light.state, node.light.state);
+                outputState(this, this.light.state, this.light.state);
             },
             100
         );
@@ -459,12 +453,12 @@ module.exports = function (RED) {
                 }
 
                 this.status({fill: 'green', shape: 'dot', text: 'Light state changed'});
-                setTimeout(() => node.status({}), 3000);
+                setTimeout(() => this.status({}), 3000);
 
-                outputState(node, node.light.state, changedState);
+                outputState(this, this.light.state, changedState);
 
                 // Update our copy.
-                this.light = node.clientConn.bridge.dsGetLight(this.lightid);
+                this.light = this.clientConn.bridge.dsGetLight(this.lightid);
             }
         );
 
@@ -477,7 +471,7 @@ module.exports = function (RED) {
                 RED.log.debug('LightColorNode(light-modified): object = ' + JSON.stringify(object));
 
                 this.status({fill: 'green', shape: 'dot', text: 'Light config modified'});
-                setTimeout(() => node.status({}), 3000);
+                setTimeout(() => this.status({}), 3000);
             }
         );
 
@@ -502,36 +496,36 @@ module.exports = function (RED) {
                     }
 
                     if (Object.prototype.hasOwnProperty.call(object, 'on')) {
-                        node.light.state.on = object.on;
+                        this.light.state.on = object.on;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
-                        node.light.state.transitiontime = object.transitiontime;
+                        this.light.state.transitiontime = object.transitiontime;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
-                        node.light.state.bri = object.bri;
+                        this.light.state.bri = object.bri;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'hue')) {
-                        node.light.state.hue = object.hue;
+                        this.light.state.hue = object.hue;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'sat')) {
-                        node.light.state.sat = object.sat;
+                        this.light.state.sat = object.sat;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'ct')) {
-                        node.light.state.ct = object.ct;
+                        this.light.state.ct = object.ct;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'xy')) {
-                        node.light.state.xy = object.xy;
+                        this.light.state.xy = object.xy;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
-                        node.light.state.colormode = object.colormode;
+                        this.light.state.colormode = object.colormode;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
-                        node.light.state.effect = object.effect;
+                        this.light.state.effect = object.effect;
                     }
 
-                    node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+                    this.clientConn.bridge.dsUpdateLightState(this.lightid, this.light.state);
 
-                    process.nextTick(() => node.emit('light-state-modified', node.lightid, node.light.state));
+                    process.nextTick(() => this.emit('light-state-modified', this.lightid, this.light.state));
                 }
             }
         );
@@ -544,10 +538,10 @@ module.exports = function (RED) {
             (removed, done) => {
                 if (removed) {
                     // this node has been deleted
-                    node.clientConn.remove(node, 'light');
+                    this.clientConn.remove(this, 'light');
                 } else {
                     // this node is being restarted
-                    node.clientConn.deregister(node, 'light');
+                    this.clientConn.deregister(this, 'light');
                 }
 
                 done();
@@ -589,10 +583,8 @@ module.exports = function (RED) {
             return;
         }
 
-        var node = this;
-
         // get a COPY of the light
-        this.light = node.clientConn.bridge.dsGetLight(this.lightid);
+        this.light = this.clientConn.bridge.dsGetLight(this.lightid);
         RED.log.debug('LightExtendedColorNode(startup): light = ' + JSON.stringify(this.light));
 
         this.status({fill: 'green', shape: 'dot', text: 'Ready'});
@@ -601,7 +593,7 @@ module.exports = function (RED) {
             () => {
                 RED.log.debug('LightExtendedColorNode(): initial write');
 
-                outputState(node, node.light.state, node.light.state);
+                outputState(this, this.light.state, this.light.state);
             },
             100
         );
@@ -645,12 +637,12 @@ module.exports = function (RED) {
                 }
 
                 this.status({fill: 'green', shape: 'dot', text: 'Light state changed'});
-                setTimeout(() => node.status({}), 3000);
+                setTimeout(() => this.status({}), 3000);
 
-                outputState(node, node.light.state, changedState);
+                outputState(this, this.light.state, changedState);
 
                 // Update our copy.
-                this.light = node.clientConn.bridge.dsGetLight(this.lightid);
+                this.light = this.clientConn.bridge.dsGetLight(this.lightid);
             }
         );
 
@@ -663,7 +655,7 @@ module.exports = function (RED) {
                 RED.log.debug('LightExtendedColorNode(light-modified): object = ' + JSON.stringify(object));
 
                 this.status({fill: 'green', shape: 'dot', text: 'Light config modified'});
-                setTimeout(() => node.status({}), 3000);
+                setTimeout(() => this.status({}), 3000);
             }
         );
 
@@ -678,7 +670,7 @@ module.exports = function (RED) {
                 if (msg.topic.toUpperCase() === 'SETSTATE') {
                     if (typeof msg.payload === 'object') {
                         process.nextTick(() => {
-                            node.emit('light-state-modified', node.lightid, msg.payload);
+                            this.emit('light-state-modified', this.lightid, msg.payload);
                         });
 
                         return;
@@ -699,38 +691,38 @@ module.exports = function (RED) {
                     }
 
                     if (Object.prototype.hasOwnProperty.call(object, 'on')) {
-                        node.light.state.on = object.on;
+                        this.light.state.on = object.on;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
-                        node.light.state.transitiontime = object.transitiontime;
+                        this.light.state.transitiontime = object.transitiontime;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
-                        node.light.state.bri = object.bri;
+                        this.light.state.bri = object.bri;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'hue')) {
-                        node.light.state.hue = object.hue;
+                        this.light.state.hue = object.hue;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'sat')) {
-                        node.light.state.sat = object.sat;
+                        this.light.state.sat = object.sat;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'ct')) {
-                        node.light.state.ct = object.ct;
+                        this.light.state.ct = object.ct;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'xy')) {
-                        node.light.state.xy = object.xy;
+                        this.light.state.xy = object.xy;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
-                        node.light.state.colormode = object.colormode;
+                        this.light.state.colormode = object.colormode;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
-                        node.light.state.effect = object.effect;
+                        this.light.state.effect = object.effect;
                     }
 
-                    node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+                    this.clientConn.bridge.dsUpdateLightState(this.lightid, this.light.state);
 
                     /*if (msg.topic.toUpperCase() === 'SETSTATE') {
                         process.nextTick(() => {
-                            node.emit('light-state-modified', node.lightid, node.light.state);
+                            this.emit('light-state-modified', this.lightid, this.light.state);
                         });
                     }*/
                 }
@@ -750,37 +742,37 @@ module.exports = function (RED) {
                 }
 
                 if (Object.prototype.hasOwnProperty.call(object, 'on')) {
-                    node.light.state.on = object.on;
+                    this.light.state.on = object.on;
                 }
                 if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
-                    node.light.state.transitiontime = object.transitiontime;
+                    this.light.state.transitiontime = object.transitiontime;
                 }
                 if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
-                    node.light.state.bri = object.bri;
+                    this.light.state.bri = object.bri;
                 }
                 if (Object.prototype.hasOwnProperty.call(object, 'hue')) {
-                    node.light.state.hue = object.hue;
+                    this.light.state.hue = object.hue;
                 }
                 if (Object.prototype.hasOwnProperty.call(object, 'sat')) {
-                    node.light.state.sat = object.sat;
+                    this.light.state.sat = object.sat;
                 }
                 if (Object.prototype.hasOwnProperty.call(object, 'ct')) {
-                    node.light.state.ct = object.ct;
+                    this.light.state.ct = object.ct;
                 }
                 if (Object.prototype.hasOwnProperty.call(object, 'xy')) {
-                    node.light.state.xy = object.xy;
+                    this.light.state.xy = object.xy;
                 }
                 if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
-                    node.light.state.colormode = object.colormode;
+                    this.light.state.colormode = object.colormode;
                 }
                 if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
-                    node.light.state.effect = object.effect;
+                    this.light.state.effect = object.effect;
                 }
 
-                node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);*/
+                this.clientConn.bridge.dsUpdateLightState(this.lightid, this.light.state);*/
 
                 //    process.nextTick(() => {
-                //        node.emit('light-state-modified', node.lightid, node.light.state);
+                //        this.emit('light-state-modified', this.lightid, this.light.state);
                 //    });
                 //}
             }
@@ -794,10 +786,10 @@ module.exports = function (RED) {
             (removed, done) => {
                 if (removed) {
                     // this node has been deleted
-                    node.clientConn.remove(node, 'light');
+                    this.clientConn.remove(this, 'light');
                 } else {
                     // this node is being restarted
-                    node.clientConn.deregister(node, 'light');
+                    this.clientConn.deregister(this, 'light');
                 }
 
                 done();
@@ -838,10 +830,8 @@ module.exports = function (RED) {
             return;
         }
 
-        var node = this;
-
         // get a COPY of the light
-        this.light = node.clientConn.bridge.dsGetLight(this.lightid);
+        this.light = this.clientConn.bridge.dsGetLight(this.lightid);
         RED.log.debug('LightColorTemperatureNode(startup): light = ' + JSON.stringify(this.light));
 
         this.status({fill: 'green', shape: 'dot', text: 'Ready'});
@@ -850,7 +840,7 @@ module.exports = function (RED) {
             () => {
                 RED.log.debug('LightColorTemperatureNode(): initial write');
 
-                outputState(node, node.light.state, node.light.state);
+                outputState(this, this.light.state, this.light.state);
             },
             100
         );
@@ -885,12 +875,12 @@ module.exports = function (RED) {
                 }
 
                 this.status({fill: 'green', shape: 'dot', text: 'Light state changed'});
-                setTimeout(() => node.status({}), 3000);
+                setTimeout(() => this.status({}), 3000);
 
-                outputState(node, node.light.state, changedState);
+                outputState(this, this.light.state, changedState);
 
                 // Update our copy.
-                this.light = node.clientConn.bridge.dsGetLight(this.lightid);
+                this.light = this.clientConn.bridge.dsGetLight(this.lightid);
             }
         );
 
@@ -903,7 +893,7 @@ module.exports = function (RED) {
                 RED.log.debug('LightColorTemperatureNode(light-modified): object = ' + JSON.stringify(object));
 
                 this.status({fill: 'green', shape: 'dot', text: 'Light config modified'});
-                setTimeout(() => node.status({}), 3000);
+                setTimeout(() => this.status({}), 3000);
             }
         );
 
@@ -929,27 +919,27 @@ module.exports = function (RED) {
                     }
 
                     if (Object.prototype.hasOwnProperty.call(object, 'on')) {
-                        node.light.state.on = object.on;
+                        this.light.state.on = object.on;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'transitiontime')) {
-                        node.light.state.transitiontime = object.transitiontime;
+                        this.light.state.transitiontime = object.transitiontime;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
-                        node.light.state.bri = object.bri;
+                        this.light.state.bri = object.bri;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'ct')) {
-                        node.light.state.ct = object.ct;
+                        this.light.state.ct = object.ct;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
-                        node.light.state.colormode = object.colormode;
+                        this.light.state.colormode = object.colormode;
                     }
                     if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
-                        node.light.state.effect = object.effect;
+                        this.light.state.effect = object.effect;
                     }
 
-                    node.clientConn.bridge.dsUpdateLightState(node.lightid, node.light.state);
+                    this.clientConn.bridge.dsUpdateLightState(this.lightid, this.light.state);
 
-                    process.nextTick(() => node.emit('light-state-modified', node.lightid, node.light.state));
+                    process.nextTick(() => this.emit('light-state-modified', this.lightid, this.light.state));
                 }
             }
         );
@@ -962,10 +952,10 @@ module.exports = function (RED) {
             (removed, done) => {
                 if (removed) {
                     // this node has been deleted
-                    node.clientConn.remove(node, 'light');
+                    this.clientConn.remove(this, 'light');
                 } else {
                     // this node is being restarted
-                    node.clientConn.deregister(node, 'light');
+                    this.clientConn.deregister(this, 'light');
                 }
 
                 done();
