@@ -44,7 +44,7 @@ module.exports = function (RED) {
 
         const node = this;
 
-        this.temperatureid = this.clientConn.register(this, 'zll', 'Temperature sensor', 'ZLLTemperature');
+        this.temperatureid = this.clientConn.register(this, 'zll', config.name, 'ZLLTemperature');
 
         if (this.temperatureid === false) {
             this.error(RED._('zllsensor.errors.create'));
