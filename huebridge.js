@@ -46,23 +46,28 @@ module.exports = function (RED) {
         const address = config.address;
         let netmask = config.netmask;
         const gateway = config.gateway;
-        let mac = '';
+        let mac = config.mac || '';
 
-        for (let nic of Object.keys(interfaces)) {
-            let done = false;
-            for (let details of interfaces[nic]) {
-                if (details.internal === false) {
-                    if (details.family === 'IPv4' && details.address === address) {
-                        netmask = details.netmask;
-                        mac = details.mac;
-                        done = true;
-                        break;
+        // If MAC is defined, use it. Otherwise search fot real MAC address of NIC.
+        if (mac === '') {
+            for (let nic of Object.keys(interfaces)) {
+                let done = false;
+                for (let details of interfaces[nic]) {
+                    if (details.internal === false) {
+                        if (details.family === 'IPv4' && details.address === address) {
+                            netmask = details.netmask;
+                            mac = details.mac;
+                            done = true;
+                            break;
+                        }
                     }
                 }
+                if (done) {
+                    break;
+                }
             }
-            if (done) {
-                break;
-            }
+        } else {
+            node.debug('Using custom MAC address ' + mac);
         }
 
         if (mac === '') {

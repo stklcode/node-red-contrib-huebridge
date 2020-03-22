@@ -7,17 +7,19 @@
             "netmask": "Netmask",
             "gateway": "Gateway",
             "port": "Port",
-            "external-paarameters": "Optional for Reverse Proxy compatibiltiy",
+            "external-parameters": "Optional for Reverse Proxy compatibiltiy",
             "extAddress": "Ext. Address",
             "extPort": "Ext. Port",
+            "mac": "MAC",
             "timezone": "Timezone",
             "timeout": "Timeout"
         },
         "placeholder": {
-            "name": "Name"
+            "name": "Name",
+            "mac": "optional (xx:xx:xx:xx:xx:xx)"
         },
         "hint": {
-            "external-paarameters": "If these fields are filled, this address will be reported on API requests instead of the actual values configured above."
+            "external-parameters": "If these fields are filled, this address will be reported on API requests instead of the actual values configured above."
         },
         "state": {
             "connected": "Connected to broker: __broker__",

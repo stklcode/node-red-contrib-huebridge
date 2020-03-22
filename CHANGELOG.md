@@ -4,6 +4,7 @@
 
 ### Added
 * Configuration flags for external address overrides in bridge node
+* Allow MAC address override
 * ZLL Temperature Sensor functionality
 * Update device name and type when node configuiration changes
 

@@ -20,7 +20,7 @@
 <script type="text/x-red" data-template-name="huebridge-client">
     <div class="form-row">
         <label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="huebridge.label.name"></span></label>
-        <input type="text" id="node-config-input-name" data-i18n="[placeholder]huebridge.label.name">
+        <input type="text" id="node-config-input-name" data-i18n="[placeholder]huebridge.placeholder.name">
     </div>
 
     <div class="form-row">
@@ -48,9 +48,14 @@
     </div>
 
     <div class="form-row">
-        <strong><span data-i18n="huebridge.label.external-paarameters"></span></strong>
+        <label for="node-config-input-mac"><i class="fa fa-globe"></i> <span data-i18n="huebridge.label.mac"></span></label>
+        <input type="text" id="node-config-input-mac" data-i18n="[placeholder]huebridge.placeholder.mac">
+    </div>
+
+    <div class="form-row">
+        <strong><span data-i18n="huebridge.label.external-parameters"></span></strong>
         <br>
-        <span data-i18n="huebridge.hint.external-paarameters"></span>
+        <span data-i18n="huebridge.hint.external-parameters"></span>
     </div>
 
     <div class="form-row">
@@ -83,6 +88,9 @@
             },
             gateway: {
                 value: '192.168.1.1', required: true
+            },
+            mac: {
+                value: '', required: false, validate: RED.validators.regex(/^([0-9a-f]{2}(:[0-9a-f]{2}){5})?$/i)
             },
             port: {
                 value: 80, required: true, validate: RED.validators.number(true)
@@ -118,7 +126,7 @@
 
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="huebridge.label.name"></span></label>
-        <input type="text" id="node-input-name" data-i18n="[placeholder]huebridge.label.name">
+        <input type="text" id="node-input-name" data-i18n="[placeholder]huebridge.placeholder.name">
     </div>
 
     <div class="form-row">
