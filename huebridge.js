@@ -93,17 +93,18 @@ module.exports = function (RED) {
          */
         this.register = function (client, type, name, typ, modelid) {
             RED.log.debug('HueBridgeNode(): register; type = ' + type + ', modelid = ' + modelid);
+            let id;
 
             switch (type) {
                 case 'light':
-                    var lightid = node.bridge.dsCreateLight(client.id, name, typ, modelid);
+                    id = node.bridge.dsCreateLight(client.id, name, typ, modelid);
 
                     RED.log.debug('HueBridgeNode(register-light): name = ' + name + ', typ = ' + typ);
-                    RED.log.debug('HueBridgeNode(register-light): lightid = ' + lightid);
+                    RED.log.debug('HueBridgeNode(register-light): lightid = ' + id);
 
-                    this.lights[lightid] = client;
+                    this.lights[id] = client;
 
-                    return lightid;
+                    return id;
 
                 case 'link':
                     RED.log.debug('HueBridgeNode(link): client.id = ' + client.id);
@@ -115,14 +116,14 @@ module.exports = function (RED) {
                     return true;
 
                 case 'zll':
-                    var sensorid = node.bridge.dsCreateSensor(typ, client.id, name);
+                    id = node.bridge.dsCreateSensor(typ, client.id, name);
 
                     RED.log.debug('HueBridgeNode(register-zll): name = ' + name + ', typ = ' + typ);
-                    RED.log.debug('HueBridgeNode(register-zll): sensorid = ' + sensorid);
+                    RED.log.debug('HueBridgeNode(register-zll): sensorid = ' + id);
 
-                    this.sensors[sensorid] = client;
+                    this.sensors[id] = client;
 
-                    return sensorid;
+                    return id;
 
                 default:
                     return false;

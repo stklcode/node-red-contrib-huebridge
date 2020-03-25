@@ -42,8 +42,6 @@ module.exports = function (RED) {
             return;
         }
 
-        const node = this;
-
         this.temperatureid = this.clientConn.register(this, 'zll', config.name, 'ZLLTemperature');
 
         if (this.temperatureid === false) {
@@ -143,17 +141,18 @@ module.exports = function (RED) {
 
                 if (typeof msg.payload === 'number') {
                     const temp = Math.round(msg.payload * 100);
-                    const obj = node.clientConn.bridge.dsGetSensor(node.temperatureid);
+                    const obj = this.clientConn.bridge.dsGetSensor(this.temperatureid);
                     RED.log.debug('ZLLTemperatureNode(input): obj = ' + JSON.stringify(obj));
 
                     obj.state.temperature = temp;
-                    node.clientConn.bridge.dsUpdateSensorState(node.temperatureid, obj.state);
+                    this.clientConn.bridge.dsUpdateSensorState(this.temperatureid, obj.state);
 
                     this.status({fill: 'green', shape: 'dot', text: 'Sensor state changed'});
+                    setTimeout(() => this.status({fill: 'green', shape: 'dot', text: temp / 100}), 3000);
                 } else {
                     this.status({fill: 'red', shape: 'dot', text: 'Unsupported payload'});
+                    setTimeout(() => this.status({}), 3000);
                 }
-                setTimeout(() => node.status({}), 3000);
             }
         );
 
@@ -162,10 +161,10 @@ module.exports = function (RED) {
             (removed, done) => {
                 if (removed) {
                     // This node has been deleted.
-                    node.clientConn.remove(node, 'zll');
+                    this.clientConn.remove(this, 'zll');
                 } else {
                     // This node is being restarted.
-                    node.clientConn.deregister(node, 'manage');
+                    this.clientConn.deregister(this, 'manage');
                 }
 
                 done();
