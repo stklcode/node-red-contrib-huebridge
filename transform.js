@@ -40,8 +40,6 @@ module.exports = function (RED) {
         this.hue = null;
         this.sat = null;
 
-        var node = this;
-
         /*
          * Respond to inputs from NodeRED
          */
@@ -53,75 +51,75 @@ module.exports = function (RED) {
                 const object = msg.payload;
 
                 if (Object.prototype.hasOwnProperty.call(object, 'on')) {
-                    node.onoff = object.on;
+                    this.onoff = object.on;
 
                     if (!object.on) {
-                        if (node.timer !== null) {
-                            clearInterval(node.timer);
-                            node.timer = null;
+                        if (this.timer !== null) {
+                            clearInterval(this.timer);
+                            this.timer = null;
                         }
 
                         msg.payload = {r: 0, g: 0, b: 0};
 
-                        node.send(msg);
+                        this.send(msg);
                     }
                 }
 
                 if (Object.prototype.hasOwnProperty.call(object, 'colormode')) {
                     if (object.colormode === 'xy' && Object.prototype.hasOwnProperty.call(object, 'xy')) {
                         RED.log.debug('TransformNode(input): colormode "xy"');
-                        node.xy = object.xy;
-                        node.ct = null;
-                        node.hue = null;
-                        node.sat = null;
+                        this.xy = object.xy;
+                        this.ct = null;
+                        this.hue = null;
+                        this.sat = null;
                     } else if (object.colormode === 'ct' && Object.prototype.hasOwnProperty.call(object, 'ct')) {
                         RED.log.debug('TransformNode(input): colormode "ct"');
-                        node.xy = null;
-                        node.ct = object.ct;
-                        node.hue = null;
-                        node.sat = null;
+                        this.xy = null;
+                        this.ct = object.ct;
+                        this.hue = null;
+                        this.sat = null;
                     } else if (object.colormode === 'hs') {
                         RED.log.debug('TransformNode(input): colormode "hs"');
-                        node.xy = null;
-                        node.ct = null;
+                        this.xy = null;
+                        this.ct = null;
 
                         if (Object.prototype.hasOwnProperty.call(object, 'hue')) {
                             RED.log.debug('TransformNode(input): got hue');
-                            node.hue = object.hue;
+                            this.hue = object.hue;
                         }
                         if (Object.prototype.hasOwnProperty.call(object, 'sat')) {
                             RED.log.debug('TransformNode(input): got sat');
-                            node.sat = object.sat;
+                            this.sat = object.sat;
                         }
                     }
                 }
 
-                if (Object.prototype.hasOwnProperty.call(object, 'transitiontime') && node.onoff === true && object.transitiontime > 0) {
+                if (Object.prototype.hasOwnProperty.call(object, 'transitiontime') && this.onoff === true && object.transitiontime > 0) {
                     RED.log.debug('TransformNode(input): transitiontime = ' + object.transitiontime);
 
                     var target_bri = object.bri * 0.0039370078740157;  // scale from [0 - 254] to [0.0 - 1.0]
-                    var bri_steps = (target_bri - node.bri) / object.transitiontime;
+                    var bri_steps = (target_bri - this.bri) / object.transitiontime;
 
                     RED.log.debug('TransformNode(input): target_bri = ' + target_bri);
                     RED.log.debug('TransformNode(input): bri_steps  = ' + bri_steps);
 
-                    node.timer = setInterval(
+                    this.timer = setInterval(
                         () => {
-                            node.bri += bri_steps;
+                            this.bri += bri_steps;
 
-                            //RED.log.debug('TransformNode(transition): node.bri = ' + node.bri);
+                            //RED.log.debug('TransformNode(transition): this.bri = ' + this.bri);
 
-                            if (node.bri >= target_bri) {
+                            if (this.bri >= target_bri) {
                                 // transition completed
-                                clearInterval(node.timer);
+                                clearInterval(this.timer);
 
-                                node.timer = null;
-                                node.bri = target_bri > 1.0 ? 1.0 : target_bri;
+                                this.timer = null;
+                                this.bri = target_bri > 1.0 ? 1.0 : target_bri;
 
                                 RED.log.debug('TransformNode(transition): transition completed');
                             }
 
-                            node.sendValues(node, msg.topic);
+                            this.sendValues(node, msg.topic);
                         },
                         100
                     );
@@ -130,18 +128,18 @@ module.exports = function (RED) {
                 }
 
                 if (Object.prototype.hasOwnProperty.call(object, 'bri')) {
-                    node.bri = object.bri * 0.0039370078740157;  // scale from [0 - 254] to [0.0 - 1.0]
+                    this.bri = object.bri * 0.0039370078740157;  // scale from [0 - 254] to [0.0 - 1.0]
                 }
 
                 if (Object.prototype.hasOwnProperty.call(object, 'effect')) {
                     //changedState.effect = object.effect;
                 }
 
-                if (node.onoff === false) {
+                if (this.onoff === false) {
                     return;
                 }
 
-                node.sendValues(node, msg.topic);
+                this.sendValues(node, msg.topic);
             }
         );
 
@@ -170,31 +168,31 @@ module.exports = function (RED) {
                 b: 0.0
             };
 
-            if (node.xy !== null) {
+            if (this.xy !== null) {
                 RED.log.debug('TransformNode(sendValues): method xy');
-                rgb = node.transformXYZSimple(node.xy[0], node.xy[1]);
+                rgb = this.transformXYZSimple(this.xy[0], this.xy[1]);
 
                 // adjust brightness
-                rgb.r = rgb.r * node.bri;
-                rgb.g = rgb.g * node.bri;
-                rgb.b = rgb.b * node.bri;
-            } else if (node.ct !== null) {
+                rgb.r = rgb.r * this.bri;
+                rgb.g = rgb.g * this.bri;
+                rgb.b = rgb.b * this.bri;
+            } else if (this.ct !== null) {
                 RED.log.debug('TransformNode(sendValues): method ct');
-                rgb = node.temperatureToRGB(node.ct);
+                rgb = this.temperatureToRGB(this.ct);
 
                 // adjust brightness
-                rgb.r = rgb.r * node.bri;
-                rgb.g = rgb.g * node.bri;
-                rgb.b = rgb.b * node.bri;
-            } else if (node.hue !== null & node.sat !== null) {
+                rgb.r = rgb.r * this.bri;
+                rgb.g = rgb.g * this.bri;
+                rgb.b = rgb.b * this.bri;
+            } else if (this.hue !== null && this.sat !== null) {
                 RED.log.debug('TransformNode(sendValues): method hs');
-                rgb = node.hsv2rgb(node.hue / 65535, node.sat / 254, node.bri);
+                rgb = this.hsv2rgb(this.hue / 65535, this.sat / 254, this.bri);
             } else {
                 RED.log.debug('TransformNode(sendValues): no transform method available');
                 return;
             }
 
-            if (node.typ === 1) {   // scale output
+            if (this.typ === 1) {   // scale output
                 rgb.r = Math.round(rgb.r * 255);
                 rgb.g = Math.round(rgb.g * 255);
                 rgb.b = Math.round(rgb.b * 255);
@@ -205,7 +203,7 @@ module.exports = function (RED) {
                 payload: rgb
             };
 
-            node.send(msg);
+            this.send(msg);
         };
 
 

@@ -51,8 +51,6 @@ module.exports = function (RED) {
             return;
         }
 
-        const node = this;
-
         this.status({fill: 'green', shape: 'dot', text: 'Ready'});
 
         /*
@@ -70,34 +68,26 @@ module.exports = function (RED) {
                     switch (msg.payload) {
                         case 1:
                             buttonid = 34;
-                            node.status({fill: 'green', shape: 'dot', text: 'Button 1'});
-                            setTimeout(function () {
-                                node.status({});
-                            }, 5000);
+                            this.status({fill: 'green', shape: 'dot', text: 'Button 1'});
+                            setTimeout(() => this.status({}), 5000);
                             break;
 
                         case 2:
                             buttonid = 16;
-                            node.status({fill: 'green', shape: 'dot', text: 'Button 2'});
-                            setTimeout(function () {
-                                node.status({});
-                            }, 5000);
+                            this.status({fill: 'green', shape: 'dot', text: 'Button 2'});
+                            setTimeout(() => this.status({}), 5000);
                             break;
 
                         case 3:
                             buttonid = 17;
-                            node.status({fill: 'green', shape: 'dot', text: 'Button 3'});
-                            setTimeout(function () {
-                                node.status({});
-                            }, 5000);
+                            this.status({fill: 'green', shape: 'dot', text: 'Button 3'});
+                            setTimeout(() => this.status({}), 5000);
                             break;
 
                         case 4:
                             buttonid = 18;
-                            node.status({fill: 'green', shape: 'dot', text: 'Button 4'});
-                            setTimeout(function () {
-                                node.status({});
-                            }, 5000);
+                            this.status({fill: 'green', shape: 'dot', text: 'Button 4'});
+                            setTimeout(() => this.status({}), 5000);
                             break;
 
                         default:
@@ -105,25 +95,25 @@ module.exports = function (RED) {
                     }
                 }
 
-                const obj = node.clientConn.bridge.dsGetSensor(node.switchid);
+                const obj = this.clientConn.bridge.dsGetSensor(this.switchid);
                 RED.log.debug('ZGPSwitchNode(input): obj = ' + JSON.stringify(obj));
 
                 obj.state.buttonevent = buttonid;
 
                 RED.log.debug('ZGPSwitchNode(input): obj = ' + JSON.stringify(obj));
-                node.clientConn.bridge.dsUpdateSensorState(node.switchid, obj.state);
+                this.clientConn.bridge.dsUpdateSensorState(this.switchid, obj.state);
 
                 setTimeout(
                     () => {
                         RED.log.debug('ZGPSwitchNode(timer):');
 
-                        let o = node.clientConn.bridge.dsGetSensor(node.switchid);
+                        let o = this.clientConn.bridge.dsGetSensor(this.switchid);
                         RED.log.debug('ZGPSwitchNode(timer): obj = ' + JSON.stringify(o));
 
                         o.state.buttonevent = 0;
 
                         RED.log.debug('ZGPSwitchNode(timer): obj = ' + JSON.stringify(o));
-                        node.clientConn.bridge.dsUpdateSensorState(node.switchid, o.state);
+                        this.clientConn.bridge.dsUpdateSensorState(this.switchid, o.state);
                     },
                     1000
                 );
@@ -135,10 +125,10 @@ module.exports = function (RED) {
             (removed, done) => {
                 if (removed) {
                     // This node has been deleted.
-                    node.clientConn.remove(node, 'zll');
+                    this.clientConn.remove(node, 'zll');
                 } else {
                     // This node is being restarted.
-                    node.clientConn.deregister(node, 'zll');
+                    this.clientConn.deregister(node, 'zll');
                 }
 
                 done();

@@ -45,8 +45,6 @@ module.exports = function (RED) {
         this.clientConn.register(this, 'manage', config);
         this.status({fill: 'green', shape: 'dot', text: 'Ready'});
 
-        var node = this;
-
         this.on('hue-remove', () => RED.log.debug('ManageNode(hue-remove)'));
 
         /*
@@ -61,54 +59,44 @@ module.exports = function (RED) {
                     case 'clearconfig':
                         if (typeof msg.payload === 'boolean' && msg.payload === true) {
                             this.status({fill: 'green', shape: 'dot', text: 'Clear config'});
-                            setTimeout(function () {
-                                node.status({});
-                            }, 5000);
+                            setTimeout(() => this.status({}), 5000);
 
-                            node.clientConn.emit('manage', 'clearconfig');
+                            this.clientConn.emit('manage', 'clearconfig');
                         } else {
                             this.status({fill: 'yellow', shape: 'dot', text: 'Payload must be bool "true"'});
-                            setTimeout(function () {
-                                node.status({});
-                            }, 5000);
+                            setTimeout(() => this.status({}), 5000);
                         }
                         break;
 
                     case 'getconfig':
                         this.status({fill: 'green', shape: 'dot', text: 'Get config'});
-                        setTimeout(function () {
-                            node.status({});
-                        }, 5000);
+                        setTimeout(() => this.status({}), 5000);
 
-                        node.send(
+                        this.send(
                             {
                                 topic: 'fullconfig',
-                                payload: node.clientConn.bridge.dsGetEverything()
+                                payload: this.clientConn.bridge.dsGetEverything()
                             }
                         );
                         break;
 
                     case 'setconfig':
-                        if (node.clientConn.bridge.dsSetEverything(JSON.parse(msg.payload)) === false) {
+                        if (this.clientConn.bridge.dsSetEverything(JSON.parse(msg.payload)) === false) {
                             this.status({fill: 'red', shape: 'dot', text: 'Failed to set config'});
                         } else {
                             this.status({fill: 'green', shape: 'dot', text: 'Set config success'});
-                            setTimeout(function () {
-                                node.status({});
-                            }, 5000);
+                            setTimeout(() => this.status({}), 5000);
                         }
                         break;
 
                     case 'getlightids':
                         this.status({fill: 'green', shape: 'dot', text: 'Get light IDs'});
-                        setTimeout(function () {
-                            node.status({});
-                        }, 5000);
+                        setTimeout(() => this.status({}), 5000);
 
-                        node.send(
+                        this.send(
                             {
                                 topic: 'lightids',
-                                payload: node.clientConn.bridge.dsGetAllLightNodes()
+                                payload: this.clientConn.bridge.dsGetAllLightNodes()
                             }
                         );
                         break;
@@ -120,13 +108,11 @@ module.exports = function (RED) {
                             lightid = msg.payload.toString();
                         }
 
-                        if (node.clientConn.bridge.dsDeleteLight(lightid) === false) {
+                        if (this.clientConn.bridge.dsDeleteLight(lightid) === false) {
                             this.status({fill: 'red', shape: 'dot', text: 'Failed to delete light'});
                         } else {
                             this.status({fill: 'green', shape: 'dot', text: 'Light deleted'});
-                            setTimeout(function () {
-                                node.status({});
-                            }, 5000);
+                            setTimeout(() => this.status({}), 5000);
                         }
                         break;
                     default:
@@ -140,10 +126,10 @@ module.exports = function (RED) {
             (removed, done) => {
                 if (removed) {
                     // this node has been deleted
-                    node.clientConn.remove(node, 'manage');
+                    this.clientConn.remove(node, 'manage');
                 } else {
                     // this node is being restarted
-                    node.clientConn.deregister(node, 'manage');
+                    this.clientConn.deregister(node, 'manage');
                 }
 
                 done();

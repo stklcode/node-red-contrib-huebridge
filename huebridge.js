@@ -37,8 +37,6 @@ module.exports = function (RED) {
         this.sensors = {};
         this.linkButtons = {};
 
-        const node = this;
-
         /*
          * Network info.
          */
@@ -67,11 +65,11 @@ module.exports = function (RED) {
                 }
             }
         } else {
-            node.debug('Using custom MAC address ' + mac);
+            RED.log.debug('Using custom MAC address ' + mac);
         }
 
         if (mac === '') {
-            node.error('Interface with address ' + address + ' not found');
+            RED.log.error('Interface with address ' + address + ' not found');
             return;
         }
 
@@ -97,7 +95,7 @@ module.exports = function (RED) {
 
             switch (type) {
                 case 'light':
-                    id = node.bridge.dsCreateLight(client.id, name, typ, modelid);
+                    id = this.bridge.dsCreateLight(client.id, name, typ, modelid);
 
                     RED.log.debug('HueBridgeNode(register-light): name = ' + name + ', typ = ' + typ);
                     RED.log.debug('HueBridgeNode(register-light): lightid = ' + id);
@@ -116,7 +114,7 @@ module.exports = function (RED) {
                     return true;
 
                 case 'zll':
-                    id = node.bridge.dsCreateSensor(typ, client.id, name);
+                    id = this.bridge.dsCreateSensor(typ, client.id, name);
 
                     RED.log.debug('HueBridgeNode(register-zll): name = ' + name + ', typ = ' + typ);
                     RED.log.debug('HueBridgeNode(register-zll): sensorid = ' + id);
@@ -158,7 +156,7 @@ module.exports = function (RED) {
                     for (idx in this.lights) {
                         if (client.id === this.lights[idx].id) {
                             RED.log.debug('HueBridgeNode(remove-light): found light!; idx = ' + idx);
-                            node.bridge.dsDeleteLight(idx);
+                            this.bridge.dsDeleteLight(idx);
 
                             delete this.lights[idx];
                             return;
@@ -174,7 +172,7 @@ module.exports = function (RED) {
                     for (idx in this.sensors) {
                         if (client.id === this.sensors[idx].id) {
                             RED.log.debug('HueBridgeNode(remove-zll): found sensor!; idx = ' + idx);
-                            node.bridge.dsDeleteSensor(idx);
+                            this.bridge.dsDeleteSensor(idx);
 
                             delete this.sensors[idx];
                             return;
@@ -187,7 +185,7 @@ module.exports = function (RED) {
         this.on(
             'close',
             (removed, done) => {
-                node.bridge.stop(done);
+                this.bridge.stop(done);
 
                 if (removed) {
                     // this node has been deleted
@@ -207,8 +205,8 @@ module.exports = function (RED) {
                 RED.log.debug('HueBridgeNode(on-manage): action = ' + action);
 
                 if (action === 'clearconfig') {
-                    node.bridge.dsClearConfiguration();
-                    node.bridge.emit('rule-engine-reload');
+                    this.bridge.dsClearConfiguration();
+                    this.bridge.emit('rule-engine-reload');
                 }
             }
         );
@@ -218,7 +216,7 @@ module.exports = function (RED) {
             (state) => {
                 RED.log.debug('HueBridgeNode(on-link): action = ' + state);
 
-                node.bridge.dsSetLinkbutton(state);
+                this.bridge.dsSetLinkbutton(state);
             }
         );
 
@@ -235,7 +233,7 @@ module.exports = function (RED) {
             (state) => {
                 RED.log.debug('HueBridgeNode(on-datastore-linkbutton): state = ' + state);
 
-                Object.keys(node.linkButtons).forEach((clientid) => node.linkButtons[clientid].emit('datastore-linkbutton', state));
+                Object.keys(this.linkButtons).forEach((clientid) => this.linkButtons[clientid].emit('datastore-linkbutton', state));
             }
         );
 
@@ -256,8 +254,8 @@ module.exports = function (RED) {
             (id, o) => {
                 RED.log.debug('HueBridgeNode(on-light-state-modified): id = ' + id);
 
-                if (Object.prototype.hasOwnProperty.call(node.lights, id)) {
-                    node.lights[id].emit('light-state-modified', id, o);
+                if (Object.prototype.hasOwnProperty.call(this.lights, id)) {
+                    this.lights[id].emit('light-state-modified', id, o);
                 }
             }
         );
@@ -267,8 +265,8 @@ module.exports = function (RED) {
             (id, o) => {
                 RED.log.debug('HueBridgeNode(on-light-modified): id = ' + id);
 
-                if (Object.prototype.hasOwnProperty.call(node.lights, id)) {
-                    node.lights[id].emit('light-modified', id, o);
+                if (Object.prototype.hasOwnProperty.call(this.lights, id)) {
+                    this.lights[id].emit('light-modified', id, o);
                 }
             }
         );
@@ -342,9 +340,7 @@ module.exports = function (RED) {
 
         this.clientConn.register(this, 'link');
 
-        var node = this;
-
-        node.status({fill: 'yellow', shape: 'ring', text: 'Link disabled'});
+        this.status({fill: 'yellow', shape: 'ring', text: 'Link disabled'});
 
         /*
          * Notifications coming from the bridge.
@@ -355,9 +351,9 @@ module.exports = function (RED) {
                 RED.log.debug('LinkButtonNode(datastore-linkbutton)');
 
                 if (state) {
-                    node.status({fill: 'green', shape: 'ring', text: 'Link enabled'});
+                    this.status({fill: 'green', shape: 'ring', text: 'Link enabled'});
                 } else {
-                    node.status({fill: 'yellow', shape: 'ring', text: 'Link disabled'});
+                    this.status({fill: 'yellow', shape: 'ring', text: 'Link disabled'});
                 }
             }
         );
@@ -370,10 +366,10 @@ module.exports = function (RED) {
             (msg) => {
                 RED.log.debug('LinkButtonNode(input)');
 
-                node.clientConn.emit('link', true);
+                this.clientConn.emit('link', true);
 
-                setTimeout(function () {
-                    node.clientConn.emit('link', false);
+                setTimeout(() => {
+                    this.clientConn.emit('link', false);
                 }, this.timeout * 1000);
             }
         );
@@ -383,10 +379,10 @@ module.exports = function (RED) {
             (removed, done) => {
                 if (removed) {
                     // This node has been deleted.
-                    node.clientConn.remove(node, 'link');
+                    this.clientConn.remove(node, 'link');
                 } else {
                     // This node is being restarted.
-                    node.clientConn.deregister(node, 'link');
+                    this.clientConn.deregister(node, 'link');
                 }
 
                 done();
