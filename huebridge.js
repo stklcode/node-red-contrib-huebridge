@@ -73,7 +73,7 @@ module.exports = function (RED) {
             return;
         }
 
-        this.bridge = new Bridge(address, netmask, gateway, mac, config.port, config.extAddress, config.extPort);
+        this.bridge = new Bridge(address, netmask, gateway, mac, config.port, config.sslPort, config.extAddress, config.extPort);
         this.bridge.debugFn = RED.log.debug;
         this.bridge.warnFn = RED.log.warn;
 

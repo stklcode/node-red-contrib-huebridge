@@ -1,5 +1,11 @@
 # Changelog
 
+## unreleased
+
+### Added
+* HTTPS server with self-signed certificate
+
+
 ## 0.1.0
 
 ### Added
@@ -18,6 +24,7 @@
 * Warning generation function
 * Fix sensing response headers (Content-Type: JSON)
 * Correct data structure for "swupdate2"
+
 
 ## 0.0.7 - 2019-02-13
 

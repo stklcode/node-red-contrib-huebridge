@@ -6,7 +6,8 @@
             "address": "Address",
             "netmask": "Netmask",
             "gateway": "Gateway",
-            "port": "Port",
+            "port": "HTTP Port",
+            "sslPort": "HTTPS Port",
             "external-parameters": "Optional for Reverse Proxy compatibiltiy",
             "extAddress": "Ext. Address",
             "extPort": "Ext. Port",
@@ -16,6 +17,8 @@
         },
         "placeholder": {
             "name": "Name",
+            "port": "80",
+            "sslPort": "optional (e.g. 443)",
             "mac": "optional (xx:xx:xx:xx:xx:xx)"
         },
         "hint": {
