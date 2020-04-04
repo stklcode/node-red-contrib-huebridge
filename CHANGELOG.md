@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.1.0
 
 ### Added
 * Configuration flags for external address overrides in bridge node
