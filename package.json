@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "description": "Node-RED nodes to simulate Phillips Hue Bridge devices",
   "main": "huebridge.js",
-  "scripts": {},
+  "scripts": {
+    "test": "mocha \"test/**/*_spec.js\"",
+    "coverage": "nyc mocha \"test/**/*_spec.js\""
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/stklcode/node-red-contrib-huebridge.git"
@@ -44,6 +47,11 @@
     "peer-ssdp": "^0.0.5",
     "stoppable": "^1.1.0",
     "suncalc": "^1.8.0"
+  },
+  "devDependencies": {
+    "mocha": "^7",
+    "nyc": "^15",
+    "rimraf": "^3"
   },
   "maintainers": [
     {
